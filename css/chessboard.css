@@ -1,0 +1,220 @@
+/**
+ * Chessboard Styles
+ * 
+ * IMPORTANT: The chessboard and pieces remain UNCHANGED per requirements.
+ * This file only provides basic functional styling for the board.
+ */
+
+/* ═══════════════════════════════════════════════════
+   CHESSBOARD CONTAINER
+   ═══════════════════════════════════════════════════ */
+
+.chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: var(--board-size);
+    height: var(--board-size);
+    border: 1px solid var(--color-gold-50);
+    
+    /* Ensure crisp rendering */
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════
+   BOARD SQUARES (Standard Chess Colors)
+   ═══════════════════════════════════════════════════ */
+
+.square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--board-size) / 10);
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    
+    transition: background-color var(--duration-fast) var(--ease-elegant);
+}
+
+/* Light Squares */
+.square.light {
+    background-color: #F0D9B5;
+}
+
+/* Dark Squares */
+.square.dark {
+    background-color: #B58863;
+}
+
+/* ═══════════════════════════════════════════════════
+   SQUARE INTERACTIONS
+   ═══════════════════════════════════════════════════ */
+
+/* Selected Square */
+.square.selected {
+    background-color: rgba(255, 255, 0, 0.5) !important;
+}
+
+/* Possible Move Indicator */
+.square.possible-move::after {
+    content: '';
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+}
+
+/* Possible Capture */
+.square.possible-capture::after {
+    content: '';
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    border: 4px solid rgba(0, 0, 0, 0.2);
+    background: transparent;
+    pointer-events: none;
+}
+
+/* Last Move Highlight */
+.square.last-move {
+    background-color: rgba(155, 199, 0, 0.41) !important;
+}
+
+/* Check Indicator */
+.square.in-check {
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 0, 0, 0.5) 0%,
+        rgba(255, 0, 0, 0.3) 25%,
+        rgba(255, 0, 0, 0.1) 90%,
+        transparent 100%
+    ) !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   CHESS PIECES
+   ═══════════════════════════════════════════════════ */
+
+.piece {
+    font-size: calc(var(--board-size) / 10);
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    cursor: grab;
+    transition: transform var(--duration-fast) var(--ease-elegant);
+}
+
+.piece:active {
+    cursor: grabbing;
+}
+
+/* White Pieces */
+.piece.white {
+    color: #FFFFFF;
+    text-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+/* Black Pieces */
+.piece.black {
+    color: #000000;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+/* Piece Hover */
+.piece:hover {
+    transform: scale(1.1);
+}
+
+/* ═══════════════════════════════════════════════════
+   COORDINATE LABELS
+   ═══════════════════════════════════════════════════ */
+
+.coordinate {
+    position: absolute;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: var(--font-weight-semibold);
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.coordinate.file {
+    bottom: 2px;
+    right: 4px;
+}
+
+.coordinate.rank {
+    top: 2px;
+    left: 4px;
+}
+
+.square.light .coordinate {
+    color: #B58863;
+}
+
+.square.dark .coordinate {
+    color: #F0D9B5;
+}
+
+/* ═══════════════════════════════════════════════════
+   DRAG AND DROP
+   ═══════════════════════════════════════════════════ */
+
+.piece.dragging {
+    opacity: 0.8;
+    z-index: 100;
+    cursor: grabbing;
+}
+
+.square.drag-over {
+    box-shadow: inset 0 0 0 4px var(--color-gold);
+}
+
+/* ═══════════════════════════════════════════════════
+   PROMOTION DIALOG
+   ═══════════════════════════════════════════════════ */
+
+.promotion-dialog {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-noir);
+    border: var(--border-deco);
+    box-shadow: var(--shadow-card);
+    z-index: 50;
+}
+
+.promotion-option {
+    padding: var(--space-sm);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-elegant);
+}
+
+.promotion-option:hover {
+    background: var(--color-gold-20);
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ═══════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+    .chessboard {
+        width: min(var(--board-size), 95vw);
+        height: min(var(--board-size), 95vw);
+    }
+    
+    .piece {
+        font-size: calc(min(var(--board-size), 95vw) / 10);
+    }
+    
+    .coordinate {
+        font-size: 8px;
+    }
+}

@@ -1,0 +1,202 @@
+/**
+ * Design Tokens - Art Deco Chess Theme
+ * 
+ * Color Palette: 1920s elegance with luxurious gold accents
+ * Typography: Geometric sans-serif for that authentic Art Deco feel
+ */
+
+:root {
+    /* ═══════════════════════════════════════════
+       COLOR PALETTE
+       ═══════════════════════════════════════════ */
+    
+    /* Primary Colors */
+    --color-noir: #0D0D0D;
+    --color-gold: #D4AF37;
+    --color-ivory: #F5F0E1;
+    --color-emerald: #1B4D3E;
+    --color-bordeaux: #722F37;
+    
+    /* Derived Colors */
+    --color-gold-light: #E5C76B;
+    --color-gold-dark: #A68A2A;
+    --color-noir-light: #1A1A1A;
+    --color-noir-lighter: #252525;
+    --color-ivory-dark: #E8E0CC;
+    
+    /* Transparency Variants */
+    --color-gold-10: rgba(212, 175, 55, 0.1);
+    --color-gold-20: rgba(212, 175, 55, 0.2);
+    --color-gold-30: rgba(212, 175, 55, 0.3);
+    --color-gold-50: rgba(212, 175, 55, 0.5);
+    --color-noir-80: rgba(13, 13, 13, 0.8);
+    --color-noir-90: rgba(13, 13, 13, 0.9);
+    
+    /* ═══════════════════════════════════════════
+       TYPOGRAPHY
+       ═══════════════════════════════════════════ */
+    
+    /* Font Families */
+    --font-display: 'Poiret One', 'Art Deco', cursive;
+    --font-body: 'Josefin Sans', 'Futura', sans-serif;
+    
+    /* Font Sizes */
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;     /* 14px */
+    --font-size-base: 1rem;       /* 16px */
+    --font-size-lg: 1.125rem;     /* 18px */
+    --font-size-xl: 1.5rem;       /* 24px */
+    --font-size-2xl: 2rem;        /* 32px */
+    --font-size-3xl: 2.5rem;      /* 40px */
+    --font-size-4xl: 3.5rem;      /* 56px */
+    
+    /* Font Weights */
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-semibold: 600;
+    
+    /* Letter Spacing - Art Deco characteristic */
+    --letter-spacing-normal: 0.05em;
+    --letter-spacing-wide: 0.15em;
+    --letter-spacing-wider: 0.25em;
+    --letter-spacing-widest: 0.35em;
+    
+    /* Line Heights */
+    --line-height-tight: 1.2;
+    --line-height-base: 1.5;
+    --line-height-relaxed: 1.75;
+    
+    /* ═══════════════════════════════════════════
+       SPACING
+       ═══════════════════════════════════════════ */
+    
+    --space-xs: 0.25rem;     /* 4px */
+    --space-sm: 0.5rem;      /* 8px */
+    --space-md: 1rem;        /* 16px */
+    --space-lg: 1.5rem;      /* 24px */
+    --space-xl: 2rem;        /* 32px */
+    --space-2xl: 3rem;       /* 48px */
+    --space-3xl: 4rem;       /* 64px */
+    
+    /* ═══════════════════════════════════════════
+       BORDERS & DECORATIVE ELEMENTS
+       ═══════════════════════════════════════════ */
+    
+    --border-width-thin: 1px;
+    --border-width-medium: 2px;
+    --border-width-thick: 3px;
+    
+    --border-deco: var(--border-width-medium) solid var(--color-gold);
+    --border-deco-thin: var(--border-width-thin) solid var(--color-gold);
+    --border-deco-thick: var(--border-width-thick) solid var(--color-gold);
+    
+    /* Double Border Effect */
+    --border-double-offset: 4px;
+    
+    /* ═══════════════════════════════════════════
+       SHADOWS & GLOWS
+       ═══════════════════════════════════════════ */
+    
+    --shadow-gold-subtle: 0 0 10px var(--color-gold-20);
+    --shadow-gold-medium: 0 0 20px var(--color-gold-30);
+    --shadow-gold-strong: 0 0 30px var(--color-gold-50);
+    
+    --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
+    
+    /* ═══════════════════════════════════════════
+       ANIMATION & TRANSITIONS
+       ═══════════════════════════════════════════ */
+    
+    /* Durations - Elegant and slow */
+    --duration-fast: 200ms;
+    --duration-normal: 400ms;
+    --duration-slow: 600ms;
+    --duration-slower: 800ms;
+    --duration-reveal: 1200ms;
+    
+    /* Easing Functions */
+    --ease-elegant: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-in-elegant: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out-elegant: cubic-bezier(0, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* ═══════════════════════════════════════════
+       LAYOUT
+       ═══════════════════════════════════════════ */
+    
+    --container-max-width: 1400px;
+    --board-size: min(480px, 90vmin);
+    --panel-width: 220px;
+    
+    /* Corner Cuts */
+    --corner-cut-sm: 8px;
+    --corner-cut-md: 15px;
+    --corner-cut-lg: 25px;
+    
+    /* ═══════════════════════════════════════════
+       Z-INDEX SCALE
+       ═══════════════════════════════════════════ */
+    
+    --z-base: 0;
+    --z-ornament: 10;
+    --z-panel: 20;
+    --z-modal: 100;
+    --z-reveal: 1000;
+}
+
+/* ═══════════════════════════════════════════════════
+   GLOBAL RESETS & BASE STYLES
+   ═══════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-base);
+    letter-spacing: var(--letter-spacing-normal);
+    color: var(--color-ivory);
+    background-color: var(--color-noir);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection Style */
+::selection {
+    background-color: var(--color-gold);
+    color: var(--color-noir);
+}
+
+/* Focus Styles for Accessibility */
+:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+}
+
+/* Screen Reader Only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

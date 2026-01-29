@@ -1,0 +1,415 @@
+/**
+ * Animations - Elegant Art Deco Motion
+ * 
+ * Slow, sophisticated transitions and animations with a 1920s feel
+ */
+
+/* ═══════════════════════════════════════════════════
+   PAGE REVEAL ANIMATION (Curtain Opening Effect)
+   ═══════════════════════════════════════════════════ */
+
+.page-reveal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-reveal);
+    pointer-events: none;
+    display: flex;
+}
+
+.page-reveal::before,
+.page-reveal::after {
+    content: '';
+    flex: 1;
+    background: var(--color-noir);
+    border: 2px solid var(--color-gold);
+}
+
+.page-reveal::before {
+    border-right: none;
+    transform-origin: left;
+    animation: curtain-left var(--duration-reveal) var(--ease-elegant) forwards;
+    animation-delay: 0.3s;
+}
+
+.page-reveal::after {
+    border-left: none;
+    transform-origin: right;
+    animation: curtain-right var(--duration-reveal) var(--ease-elegant) forwards;
+    animation-delay: 0.3s;
+}
+
+@keyframes curtain-left {
+    0% {
+        transform: scaleX(1);
+    }
+    100% {
+        transform: scaleX(0);
+    }
+}
+
+@keyframes curtain-right {
+    0% {
+        transform: scaleX(1);
+    }
+    100% {
+        transform: scaleX(0);
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   FADE IN ANIMATIONS
+   ═══════════════════════════════════════════════════ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   ELEMENT ENTRANCE ANIMATIONS
+   ═══════════════════════════════════════════════════ */
+
+.app-container {
+    animation: fadeIn var(--duration-slow) var(--ease-elegant);
+    animation-delay: 1s;
+    animation-fill-mode: both;
+}
+
+.header-monumental {
+    animation: fadeInDown var(--duration-slow) var(--ease-elegant);
+    animation-delay: 1.2s;
+    animation-fill-mode: both;
+}
+
+.panel-left {
+    animation: fadeInLeft var(--duration-slow) var(--ease-elegant);
+    animation-delay: 1.4s;
+    animation-fill-mode: both;
+}
+
+.panel-right {
+    animation: fadeInRight var(--duration-slow) var(--ease-elegant);
+    animation-delay: 1.4s;
+    animation-fill-mode: both;
+}
+
+.board-container {
+    animation: fadeIn var(--duration-slower) var(--ease-elegant);
+    animation-delay: 1.6s;
+    animation-fill-mode: both;
+}
+
+.controls-bar {
+    animation: fadeInUp var(--duration-slow) var(--ease-elegant);
+    animation-delay: 1.8s;
+    animation-fill-mode: both;
+}
+
+.footer-deco {
+    animation: fadeIn var(--duration-slow) var(--ease-elegant);
+    animation-delay: 2s;
+    animation-fill-mode: both;
+}
+
+/* ═══════════════════════════════════════════════════
+   GEOMETRIC SPINNER (AI Thinking)
+   ═══════════════════════════════════════════════════ */
+
+.geometric-spinner {
+    width: 40px;
+    height: 40px;
+    position: relative;
+}
+
+.spinner-triangle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 26px solid var(--color-gold);
+    transform-origin: center 70%;
+    animation: spinTriangle 2s var(--ease-elegant) infinite;
+}
+
+@keyframes spinTriangle {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+        opacity: 1;
+    }
+    25% {
+        opacity: 0.6;
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(180deg);
+        opacity: 1;
+    }
+    75% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+        opacity: 1;
+    }
+}
+
+/* Hexagon Alternative */
+.spinner-hexagon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 17px;
+    background: var(--color-gold);
+    transform: translate(-50%, -50%);
+    animation: spinHexagon 3s var(--ease-elegant) infinite;
+}
+
+.spinner-hexagon::before,
+.spinner-hexagon::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+}
+
+.spinner-hexagon::before {
+    bottom: 100%;
+    border-bottom: 8.5px solid var(--color-gold);
+}
+
+.spinner-hexagon::after {
+    top: 100%;
+    border-top: 8.5px solid var(--color-gold);
+}
+
+@keyframes spinHexagon {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(180deg) scale(0.8);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg) scale(1);
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   GOLDEN GLOW PULSE
+   ═══════════════════════════════════════════════════ */
+
+@keyframes glowPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px var(--color-gold-20);
+    }
+    50% {
+        box-shadow: 0 0 25px var(--color-gold-50);
+    }
+}
+
+.glow-pulse {
+    animation: glowPulse 2s var(--ease-elegant) infinite;
+}
+
+/* ═══════════════════════════════════════════════════
+   STATUS LINE EXPANSION
+   ═══════════════════════════════════════════════════ */
+
+@keyframes lineExpand {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.status-container .status-line {
+    animation: lineExpand var(--duration-slow) var(--ease-elegant);
+    animation-delay: 2s;
+    animation-fill-mode: both;
+}
+
+.status-line-left {
+    transform-origin: right;
+}
+
+.status-line-right {
+    transform-origin: left;
+}
+
+/* ═══════════════════════════════════════════════════
+   CORNER ORNAMENT ANIMATIONS
+   ═══════════════════════════════════════════════════ */
+
+.corner-ornament {
+    animation: fadeIn var(--duration-slower) var(--ease-elegant);
+    animation-delay: 2.2s;
+    animation-fill-mode: both;
+}
+
+/* ═══════════════════════════════════════════════════
+   HOVER TRANSITIONS
+   ═══════════════════════════════════════════════════ */
+
+.panel-frame {
+    transition: box-shadow var(--duration-normal) var(--ease-elegant);
+}
+
+.panel-frame:hover {
+    box-shadow: var(--shadow-gold-subtle);
+}
+
+/* ═══════════════════════════════════════════════════
+   MOVE ITEM HOVER
+   ═══════════════════════════════════════════════════ */
+
+.move-item {
+    transition: 
+        background-color var(--duration-fast) var(--ease-elegant),
+        padding-left var(--duration-fast) var(--ease-elegant);
+}
+
+.move-item:hover {
+    background: var(--color-gold-10);
+    padding-left: var(--space-sm);
+}
+
+/* ═══════════════════════════════════════════════════
+   BUTTON SHINE EFFECT
+   ═══════════════════════════════════════════════════ */
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 200%;
+    }
+}
+
+.btn-deco {
+    overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════
+   AVATAR PULSE
+   ═══════════════════════════════════════════════════ */
+
+@keyframes avatarPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 var(--color-gold-30);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 15px 0 var(--color-gold-30);
+    }
+}
+
+.avatar-frame.active {
+    animation: avatarPulse 2s var(--ease-elegant) infinite;
+}
+
+/* ═══════════════════════════════════════════════════
+   TEXT SHIMMER
+   ═══════════════════════════════════════════════════ */
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% center;
+    }
+    100% {
+        background-position: 200% center;
+    }
+}
+
+.title-shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--color-gold) 0%,
+        var(--color-gold-light) 25%,
+        var(--color-gold) 50%,
+        var(--color-gold-light) 75%,
+        var(--color-gold) 100%
+    );
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .page-reveal {
+        display: none;
+    }
+}

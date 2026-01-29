@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copilot Chess • Art Deco Edition</title>
+    
+    <!-- Google Fonts: Art Deco Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Poiret+One&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/patterns.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/chessboard.css">
+</head>
+<body>
+    <!-- Page Reveal Overlay -->
+    <div class="page-reveal" aria-hidden="true"></div>
+    
+    <!-- Decorative Corner Ornaments -->
+    <div class="corner-ornament corner-top-left" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 100 L0 0 L100 0 L80 20 L20 20 L20 80 Z" fill="currentColor"/>
+            <path d="M10 90 L10 10 L90 10" stroke="currentColor" fill="none" stroke-width="1"/>
+            <circle cx="10" cy="10" r="3" fill="currentColor"/>
+        </svg>
+    </div>
+    <div class="corner-ornament corner-top-right" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M100 100 L100 0 L0 0 L20 20 L80 20 L80 80 Z" fill="currentColor"/>
+            <path d="M90 90 L90 10 L10 10" stroke="currentColor" fill="none" stroke-width="1"/>
+            <circle cx="90" cy="10" r="3" fill="currentColor"/>
+        </svg>
+    </div>
+    <div class="corner-ornament corner-bottom-left" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 0 L0 100 L100 100 L80 80 L20 80 L20 20 Z" fill="currentColor"/>
+            <path d="M10 10 L10 90 L90 90" stroke="currentColor" fill="none" stroke-width="1"/>
+            <circle cx="10" cy="90" r="3" fill="currentColor"/>
+        </svg>
+    </div>
+    <div class="corner-ornament corner-bottom-right" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M100 0 L100 100 L0 100 L20 80 L80 80 L80 20 Z" fill="currentColor"/>
+            <path d="M90 10 L90 90 L10 90" stroke="currentColor" fill="none" stroke-width="1"/>
+            <circle cx="90" cy="90" r="3" fill="currentColor"/>
+        </svg>
+    </div>
+
+    <div class="app-container">
+        <!-- Monumental Header -->
+        <header class="header-monumental">
+            <div class="header-ornament" aria-hidden="true">
+                <svg viewBox="0 0 200 30" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 15 L20 0 L40 15 L60 0 L80 15 L100 0 L120 15 L140 0 L160 15 L180 0 L200 15" stroke="currentColor" fill="none" stroke-width="1.5"/>
+                    <line x1="0" y1="25" x2="200" y2="25" stroke="currentColor" stroke-width="1"/>
+                </svg>
+            </div>
+            <h1 class="title-deco">COPILOT CHESS</h1>
+            <p class="subtitle-deco">A R T • D E C O • E D I T I O N</p>
+            <div class="header-ornament header-ornament-bottom" aria-hidden="true">
+                <svg viewBox="0 0 200 30" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 15 L20 30 L40 15 L60 30 L80 15 L100 30 L120 15 L140 30 L160 15 L180 30 L200 15" stroke="currentColor" fill="none" stroke-width="1.5"/>
+                    <line x1="0" y1="5" x2="200" y2="5" stroke="currentColor" stroke-width="1"/>
+                </svg>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="game-area">
+            <!-- Left Panel: Player Info -->
+            <aside class="panel panel-player panel-left">
+                <div class="panel-frame">
+                    <div class="panel-header">
+                        <span class="diamond-icon" aria-hidden="true">◆</span>
+                        <h2>PLAYER</h2>
+                        <span class="diamond-icon" aria-hidden="true">◆</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="player-avatar">
+                            <div class="avatar-frame">
+                                <span class="avatar-icon">♔</span>
+                            </div>
+                        </div>
+                        <div class="player-info">
+                            <span class="player-name">WHITE</span>
+                            <span class="player-time">15:00</span>
+                        </div>
+                    </div>
+                    <div class="panel-separator">
+                        <svg viewBox="0 0 100 10" aria-hidden="true">
+                            <path d="M0 5 L40 5 L50 0 L60 5 L100 5" stroke="currentColor" fill="none" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="captured-pieces">
+                        <span class="captured-label">CAPTURED</span>
+                        <div class="captured-list" id="white-captured"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Chess Board with Decorative Frame -->
+            <section class="board-container">
+                <div class="board-frame">
+                    <div class="board-frame-inner">
+                        <!-- Fan Ornaments -->
+                        <div class="fan-ornament fan-top-left" aria-hidden="true">
+                            <svg viewBox="0 0 50 50">
+                                <path d="M0 50 Q0 0 50 0 L45 5 Q5 5 5 45 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="fan-ornament fan-top-right" aria-hidden="true">
+                            <svg viewBox="0 0 50 50">
+                                <path d="M50 50 Q50 0 0 0 L5 5 Q45 5 45 45 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="fan-ornament fan-bottom-left" aria-hidden="true">
+                            <svg viewBox="0 0 50 50">
+                                <path d="M0 0 Q0 50 50 50 L45 45 Q5 45 5 5 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="fan-ornament fan-bottom-right" aria-hidden="true">
+                            <svg viewBox="0 0 50 50">
+                                <path d="M50 0 Q50 50 0 50 L5 45 Q45 45 45 5 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- Chess Board (UNCHANGED) -->
+                        <div id="chessboard" class="chessboard">
+                            <!-- Board will be generated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Message -->
+                <div class="status-container">
+                    <div class="status-line status-line-left" aria-hidden="true"></div>
+                    <div class="status-message" id="game-status">
+                        <span class="status-text">WHITE TO MOVE</span>
+                    </div>
+                    <div class="status-line status-line-right" aria-hidden="true"></div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Move History & AI -->
+            <aside class="panel panel-moves panel-right">
+                <div class="panel-frame">
+                    <div class="panel-header">
+                        <span class="diamond-icon" aria-hidden="true">◆</span>
+                        <h2>MOVES</h2>
+                        <span class="diamond-icon" aria-hidden="true">◆</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="move-history" id="move-history">
+                            <div class="move-item">
+                                <span class="move-number">1.</span>
+                                <span class="move-white">e4</span>
+                                <span class="move-black">e5</span>
+                            </div>
+                            <div class="move-item">
+                                <span class="move-number">2.</span>
+                                <span class="move-white">Nf3</span>
+                                <span class="move-black">Nc6</span>
+                            </div>
+                            <div class="move-item">
+                                <span class="move-number">3.</span>
+                                <span class="move-white">Bb5</span>
+                                <span class="move-black">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-separator">
+                        <svg viewBox="0 0 100 10" aria-hidden="true">
+                            <path d="M0 5 L40 5 L50 0 L60 5 L100 5" stroke="currentColor" fill="none" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="ai-status">
+                        <span class="ai-label">AI ENGINE</span>
+                        <div class="ai-thinking" id="ai-thinking">
+                            <div class="geometric-spinner" aria-label="AI is thinking">
+                                <div class="spinner-triangle"></div>
+                            </div>
+                            <span class="thinking-text">ANALYZING</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Game Controls -->
+        <nav class="controls-bar">
+            <button class="btn-deco" type="button">
+                <span class="btn-icon">▶</span>
+                <span class="btn-text">NEW GAME</span>
+            </button>
+            <button class="btn-deco" type="button">
+                <span class="btn-icon">↩</span>
+                <span class="btn-text">UNDO</span>
+            </button>
+            <button class="btn-deco" type="button">
+                <span class="btn-icon">⚙</span>
+                <span class="btn-text">SETTINGS</span>
+            </button>
+            <button class="btn-deco btn-deco-accent" type="button">
+                <span class="btn-icon">⚔</span>
+                <span class="btn-text">VS AI</span>
+            </button>
+        </nav>
+
+        <!-- Footer -->
+        <footer class="footer-deco">
+            <div class="footer-ornament" aria-hidden="true">
+                <svg viewBox="0 0 300 20">
+                    <line x1="0" y1="10" x2="100" y2="10" stroke="currentColor"/>
+                    <polygon points="140,0 150,10 140,20 130,10" fill="currentColor"/>
+                    <polygon points="160,0 170,10 160,20 150,10" fill="currentColor"/>
+                    <line x1="200" y1="10" x2="300" y2="10" stroke="currentColor"/>
+                </svg>
+            </div>
+            <p class="footer-text">CRAFTED WITH ELEGANCE • MCMXXIV STYLE</p>
+        </footer>
+    </div>
+
+    <script src="js/chessboard.js"></script>
+</body>
+</html>

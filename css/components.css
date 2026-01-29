@@ -1,0 +1,551 @@
+/**
+ * Components - Art Deco UI Elements
+ * 
+ * Buttons, panels, cards, and decorative elements with golden borders,
+ * cut corners, and elegant Art Deco styling
+ */
+
+/* ═══════════════════════════════════════════════════
+   PANELS - Cut Corners & Golden Borders
+   ═══════════════════════════════════════════════════ */
+
+.panel {
+    position: relative;
+    z-index: var(--z-panel);
+}
+
+.panel-frame {
+    background: linear-gradient(
+        180deg,
+        var(--color-noir-light) 0%,
+        var(--color-noir) 100%
+    );
+    border: var(--border-deco);
+    padding: var(--space-lg);
+    position: relative;
+    
+    /* Cut Corners using clip-path */
+    clip-path: polygon(
+        0 var(--corner-cut-md),
+        var(--corner-cut-md) 0,
+        calc(100% - var(--corner-cut-md)) 0,
+        100% var(--corner-cut-md),
+        100% calc(100% - var(--corner-cut-md)),
+        calc(100% - var(--corner-cut-md)) 100%,
+        var(--corner-cut-md) 100%,
+        0 calc(100% - var(--corner-cut-md))
+    );
+}
+
+/* Double Border Effect */
+.panel-frame::before {
+    content: '';
+    position: absolute;
+    top: var(--border-double-offset);
+    left: var(--border-double-offset);
+    right: var(--border-double-offset);
+    bottom: var(--border-double-offset);
+    border: var(--border-deco-thin);
+    pointer-events: none;
+    clip-path: polygon(
+        0 var(--corner-cut-sm),
+        var(--corner-cut-sm) 0,
+        calc(100% - var(--corner-cut-sm)) 0,
+        100% var(--corner-cut-sm),
+        100% calc(100% - var(--corner-cut-sm)),
+        calc(100% - var(--corner-cut-sm)) 100%,
+        var(--corner-cut-sm) 100%,
+        0 calc(100% - var(--corner-cut-sm))
+    );
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: var(--border-deco-thin);
+}
+
+.panel-header h2 {
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-regular);
+    letter-spacing: var(--letter-spacing-wider);
+    color: var(--color-gold);
+    text-transform: uppercase;
+}
+
+.panel-content {
+    padding: var(--space-md) 0;
+}
+
+.panel-separator {
+    margin: var(--space-md) 0;
+    color: var(--color-gold);
+    text-align: center;
+}
+
+.panel-separator svg {
+    width: 100%;
+    height: 10px;
+}
+
+/* ═══════════════════════════════════════════════════
+   BUTTONS - Double Border Rectangle
+   ═══════════════════════════════════════════════════ */
+
+.btn-deco {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    
+    padding: var(--space-sm) var(--space-lg);
+    min-width: 140px;
+    
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+    color: var(--color-ivory);
+    
+    background: transparent;
+    border: var(--border-deco);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    
+    transition: 
+        color var(--duration-normal) var(--ease-elegant),
+        background-color var(--duration-normal) var(--ease-elegant),
+        box-shadow var(--duration-normal) var(--ease-elegant),
+        transform var(--duration-normal) var(--ease-elegant);
+}
+
+/* Inner Border */
+.btn-deco::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
+    border: var(--border-deco-thin);
+    pointer-events: none;
+    transition: opacity var(--duration-normal) var(--ease-elegant);
+}
+
+/* Hover Fill Effect */
+.btn-deco::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-normal) var(--ease-elegant);
+    z-index: -1;
+}
+
+.btn-deco:hover {
+    color: var(--color-noir);
+    box-shadow: var(--shadow-gold-medium);
+}
+
+.btn-deco:hover::after {
+    transform: scaleX(1);
+}
+
+.btn-deco:active {
+    transform: scale(0.98);
+}
+
+.btn-deco:focus-visible {
+    box-shadow: var(--shadow-gold-strong);
+}
+
+/* Accent Button Variant */
+.btn-deco-accent {
+    background: var(--color-gold);
+    color: var(--color-noir);
+}
+
+.btn-deco-accent::after {
+    background: var(--color-ivory);
+}
+
+.btn-deco-accent:hover {
+    color: var(--color-noir);
+}
+
+.btn-icon {
+    font-size: var(--font-size-base);
+}
+
+.btn-text {
+    position: relative;
+    z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════
+   DECORATIVE ICONS
+   ═══════════════════════════════════════════════════ */
+
+.diamond-icon {
+    color: var(--color-gold);
+    font-size: var(--font-size-xs);
+    opacity: 0.8;
+}
+
+.triangle-icon {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid var(--color-gold);
+}
+
+/* ═══════════════════════════════════════════════════
+   CORNER ORNAMENTS
+   ═══════════════════════════════════════════════════ */
+
+.corner-ornament {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    color: var(--color-gold);
+    opacity: 0.6;
+    z-index: var(--z-ornament);
+    pointer-events: none;
+}
+
+.corner-ornament svg {
+    width: 100%;
+    height: 100%;
+}
+
+.corner-top-left {
+    top: var(--space-md);
+    left: var(--space-md);
+}
+
+.corner-top-right {
+    top: var(--space-md);
+    right: var(--space-md);
+    transform: scaleX(-1);
+}
+
+.corner-bottom-left {
+    bottom: var(--space-md);
+    left: var(--space-md);
+}
+
+.corner-bottom-right {
+    bottom: var(--space-md);
+    right: var(--space-md);
+    transform: scaleX(-1);
+}
+
+/* ═══════════════════════════════════════════════════
+   FAN ORNAMENTS (Board Frame)
+   ═══════════════════════════════════════════════════ */
+
+.fan-ornament {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    color: var(--color-gold);
+    z-index: 5;
+}
+
+.fan-ornament svg {
+    width: 100%;
+    height: 100%;
+}
+
+.fan-top-left {
+    top: -5px;
+    left: -5px;
+}
+
+.fan-top-right {
+    top: -5px;
+    right: -5px;
+}
+
+.fan-bottom-left {
+    bottom: -5px;
+    left: -5px;
+}
+
+.fan-bottom-right {
+    bottom: -5px;
+    right: -5px;
+}
+
+/* ═══════════════════════════════════════════════════
+   PLAYER ELEMENTS
+   ═══════════════════════════════════════════════════ */
+
+.player-avatar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-md);
+}
+
+.avatar-frame {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border-deco);
+    background: var(--color-noir-lighter);
+    
+    /* Octagon shape */
+    clip-path: polygon(
+        30% 0%, 70% 0%, 100% 30%, 100% 70%,
+        70% 100%, 30% 100%, 0% 70%, 0% 30%
+    );
+}
+
+.avatar-icon {
+    font-size: var(--font-size-2xl);
+    color: var(--color-gold);
+}
+
+.player-info {
+    text-align: center;
+}
+
+.player-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    letter-spacing: var(--letter-spacing-wider);
+    color: var(--color-gold);
+    margin-bottom: var(--space-xs);
+}
+
+.player-time {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-light);
+    letter-spacing: var(--letter-spacing-wide);
+    color: var(--color-ivory);
+}
+
+/* ═══════════════════════════════════════════════════
+   CAPTURED PIECES
+   ═══════════════════════════════════════════════════ */
+
+.captured-pieces {
+    text-align: center;
+}
+
+.captured-label {
+    display: block;
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wider);
+    color: var(--color-gold);
+    opacity: 0.7;
+    margin-bottom: var(--space-sm);
+}
+
+.captured-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-xs);
+    min-height: 24px;
+    font-size: var(--font-size-lg);
+    color: var(--color-ivory-dark);
+}
+
+/* ═══════════════════════════════════════════════════
+   MOVE HISTORY
+   ═══════════════════════════════════════════════════ */
+
+.move-history {
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: var(--space-sm);
+    
+    /* Custom Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gold-30) var(--color-noir-lighter);
+}
+
+.move-history::-webkit-scrollbar {
+    width: 6px;
+}
+
+.move-history::-webkit-scrollbar-track {
+    background: var(--color-noir-lighter);
+}
+
+.move-history::-webkit-scrollbar-thumb {
+    background: var(--color-gold-30);
+    border-radius: 3px;
+}
+
+.move-item {
+    display: grid;
+    grid-template-columns: 30px 1fr 1fr;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--color-gold-10);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    letter-spacing: var(--letter-spacing-normal);
+}
+
+.move-item:last-child {
+    border-bottom: none;
+}
+
+.move-number {
+    color: var(--color-gold);
+    font-weight: var(--font-weight-semibold);
+}
+
+.move-white,
+.move-black {
+    color: var(--color-ivory);
+}
+
+.move-black {
+    opacity: 0.8;
+}
+
+/* ═══════════════════════════════════════════════════
+   AI STATUS
+   ═══════════════════════════════════════════════════ */
+
+.ai-status {
+    text-align: center;
+}
+
+.ai-label {
+    display: block;
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wider);
+    color: var(--color-gold);
+    opacity: 0.7;
+    margin-bottom: var(--space-md);
+}
+
+.ai-thinking {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.thinking-text {
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-widest);
+    color: var(--color-ivory);
+    opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════
+   STATUS MESSAGE (Telegram Style)
+   ═══════════════════════════════════════════════════ */
+
+.status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--space-lg);
+    gap: var(--space-md);
+}
+
+.status-line {
+    flex: 1;
+    height: 1px;
+    max-width: 100px;
+}
+
+.status-line-left {
+    background: linear-gradient(90deg, transparent, var(--color-gold));
+}
+
+.status-line-right {
+    background: linear-gradient(90deg, var(--color-gold), transparent);
+}
+
+.status-message {
+    padding: var(--space-sm) var(--space-lg);
+    border: var(--border-deco-thin);
+    background: var(--color-noir-80);
+}
+
+.status-text {
+    font-family: var(--font-display);
+    font-size: var(--font-size-sm);
+    letter-spacing: var(--letter-spacing-widest);
+    color: var(--color-gold);
+    text-transform: uppercase;
+}
+
+/* Status Variants */
+.status-message.status-check {
+    border-color: var(--color-bordeaux);
+}
+
+.status-message.status-check .status-text {
+    color: var(--color-bordeaux);
+}
+
+.status-message.status-checkmate {
+    background: var(--color-gold);
+}
+
+.status-message.status-checkmate .status-text {
+    color: var(--color-noir);
+}
+
+/* ═══════════════════════════════════════════════════
+   HEADER ORNAMENTS
+   ═══════════════════════════════════════════════════ */
+
+.header-ornament {
+    color: var(--color-gold);
+    text-align: center;
+    margin-bottom: var(--space-sm);
+}
+
+.header-ornament svg {
+    max-width: 200px;
+    height: auto;
+}
+
+.header-ornament-bottom {
+    margin-top: var(--space-sm);
+    margin-bottom: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   FOOTER ORNAMENTS
+   ═══════════════════════════════════════════════════ */
+
+.footer-ornament {
+    color: var(--color-gold);
+    text-align: center;
+    margin-bottom: var(--space-sm);
+}
+
+.footer-ornament svg {
+    max-width: 300px;
+    height: 20px;
+}

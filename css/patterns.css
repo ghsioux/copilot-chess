@@ -1,0 +1,172 @@
+/**
+ * Patterns - Art Deco Geometric Backgrounds
+ * 
+ * Chevron, sunburst, and geometric patterns for the luxurious Art Deco aesthetic
+ */
+
+/* ═══════════════════════════════════════════════════
+   CHEVRON PATTERN (Main Background)
+   ═══════════════════════════════════════════════════ */
+
+body {
+    background-color: var(--color-noir);
+    background-image: 
+        /* Subtle chevron pattern */
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 20px,
+            var(--color-gold-10) 20px,
+            var(--color-gold-10) 22px
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 20px,
+            var(--color-gold-10) 20px,
+            var(--color-gold-10) 22px
+        );
+}
+
+/* ═══════════════════════════════════════════════════
+   SUNBURST PATTERN (For Special Elements)
+   ═══════════════════════════════════════════════════ */
+
+.pattern-sunburst {
+    position: relative;
+}
+
+.pattern-sunburst::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translate(-50%, -50%);
+    background: 
+        repeating-conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 10deg,
+            var(--color-gold-10) 10deg,
+            var(--color-gold-10) 20deg
+        );
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ═══════════════════════════════════════════════════
+   FAN PATTERN (Art Deco Iconic)
+   ═══════════════════════════════════════════════════ */
+
+.pattern-fan {
+    position: relative;
+    overflow: hidden;
+}
+
+.pattern-fan::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 150px;
+    background: 
+        repeating-conic-gradient(
+            from 180deg at 50% 100%,
+            transparent 0deg,
+            transparent 15deg,
+            var(--color-gold-20) 15deg,
+            var(--color-gold-20) 30deg
+        );
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   GEOMETRIC GRID (For Panels)
+   ═══════════════════════════════════════════════════ */
+
+.pattern-grid {
+    background-image: 
+        linear-gradient(var(--color-gold-10) 1px, transparent 1px),
+        linear-gradient(90deg, var(--color-gold-10) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* ═══════════════════════════════════════════════════
+   DIAMOND PATTERN
+   ═══════════════════════════════════════════════════ */
+
+.pattern-diamond {
+    background-image: 
+        linear-gradient(45deg, var(--color-gold-10) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--color-gold-10) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--color-gold-10) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--color-gold-10) 75%);
+    background-size: 30px 30px;
+    background-position: 0 0, 15px 0, 15px -15px, 0 15px;
+}
+
+/* ═══════════════════════════════════════════════════
+   STEPPED PATTERN (Ziggurat Style)
+   ═══════════════════════════════════════════════════ */
+
+.pattern-stepped {
+    background: 
+        linear-gradient(135deg, var(--color-gold-10) 10%, transparent 10%),
+        linear-gradient(225deg, var(--color-gold-10) 10%, transparent 10%),
+        linear-gradient(45deg, var(--color-gold-10) 10%, transparent 10%),
+        linear-gradient(315deg, var(--color-gold-10) 10%, transparent 10%);
+    background-position: 10px 0, 10px 0, 0 0, 0 0;
+    background-size: 20px 20px;
+}
+
+/* ═══════════════════════════════════════════════════
+   NOISE TEXTURE OVERLAY
+   ═══════════════════════════════════════════════════ */
+
+.texture-noise::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════════════════════════════════════════
+   VERTICAL LINES PATTERN
+   ═══════════════════════════════════════════════════ */
+
+.pattern-lines-vertical {
+    background-image: 
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 19px,
+            var(--color-gold-10) 19px,
+            var(--color-gold-10) 20px
+        );
+}
+
+/* ═══════════════════════════════════════════════════
+   HORIZONTAL LINES PATTERN
+   ═══════════════════════════════════════════════════ */
+
+.pattern-lines-horizontal {
+    background-image: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 19px,
+            var(--color-gold-10) 19px,
+            var(--color-gold-10) 20px
+        );
+}
