@@ -1,0 +1,773 @@
+/* ============================================
+   COPILOT CHESS - ORGANIC/NATURAL AESTHETIC
+   Forest Edition Design System
+   ============================================ */
+
+/* ============================================
+   1. DESIGN TOKENS (CSS Variables)
+   ============================================ */
+:root {
+    /* Color Palette - Nature Inspired */
+    --color-moss: #4a5d23;
+    --color-moss-dark: #3a4a1b;
+    --color-leaf: #7d8f4e;
+    --color-leaf-light: #9aad6a;
+    --color-earth: #d4c5a9;
+    --color-earth-light: #e8dcc8;
+    --color-bark: #6b4423;
+    --color-bark-dark: #4d311a;
+    --color-gold: #c9a227;
+    --color-gold-light: #dbb73d;
+    
+    /* Neutral Tones */
+    --color-cream: #f5f2eb;
+    --color-cream-dark: #e8e3d8;
+    --color-text: #2d3a1f;
+    --color-text-muted: #5a6b45;
+    
+    /* Typography */
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Lora', Georgia, serif;
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    
+    /* Organic Border Radius */
+    --radius-organic: 40% 60% 70% 30% / 40% 30% 70% 60%;
+    --radius-organic-alt: 60% 40% 30% 70% / 60% 70% 30% 40%;
+    --radius-leaf: 70% 30% 70% 30% / 30% 70% 30% 70%;
+    --radius-soft: 1rem;
+    
+    /* Shadows */
+    --shadow-soft: 0 8px 32px rgba(74, 93, 35, 0.15);
+    --shadow-hover: 0 12px 40px rgba(74, 93, 35, 0.25);
+    --shadow-inset: inset 0 2px 8px rgba(74, 93, 35, 0.1);
+    
+    /* Transitions */
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   2. BASE STYLES & RESET
+   ============================================ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--color-text);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    
+    /* Background with subtle gradient and texture */
+    background: 
+        /* Grain texture overlay */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+        /* Main gradient */
+        linear-gradient(
+            135deg,
+            var(--color-cream) 0%,
+            var(--color-earth-light) 50%,
+            rgba(125, 143, 78, 0.15) 100%
+        );
+    background-blend-mode: overlay, normal;
+    background-attachment: fixed;
+}
+
+/* ============================================
+   3. TYPOGRAPHY
+   ============================================ */
+h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    color: var(--color-moss);
+}
+
+/* ============================================
+   4. HEADER - Tree Silhouette Background
+   ============================================ */
+.header {
+    position: relative;
+    padding: var(--space-lg) var(--space-xl);
+    background: linear-gradient(180deg, var(--color-moss) 0%, var(--color-moss-dark) 100%);
+    overflow: hidden;
+    animation: headerGrow 0.8s ease-out;
+}
+
+@keyframes headerGrow {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.header-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 100'%3E%3Cpath fill='%233a4a1b' fill-opacity='0.3' d='M0,100 L0,70 Q50,50 100,70 T200,65 T300,75 T400,60 T500,70 T600,55 T700,65 T800,70 T900,60 T1000,75 T1100,65 T1200,70 L1200,100 Z'/%3E%3Cpath fill='%233a4a1b' fill-opacity='0.5' d='M0,100 L0,80 Q75,70 150,80 T300,75 T450,85 T600,75 T750,80 T900,70 T1050,80 T1200,75 L1200,100 Z'/%3E%3C/svg%3E");
+    background-size: cover;
+    background-position: bottom;
+    opacity: 0.6;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.logo {
+    color: var(--color-earth);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.leaf-icon {
+    font-size: 1.5rem;
+    animation: leafSway 3s ease-in-out infinite;
+}
+
+@keyframes leafSway {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+
+.nav {
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* ============================================
+   5. BUTTONS - Leaf Style
+   ============================================ */
+.btn {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.btn-leaf {
+    background: linear-gradient(135deg, var(--color-leaf) 0%, var(--color-moss) 100%);
+    color: var(--color-cream);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-leaf);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-leaf::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+    opacity: 0;
+    transition: opacity var(--transition-smooth);
+}
+
+.btn-leaf:hover {
+    transform: scale(1.05) rotate(-2deg);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-leaf:hover::before {
+    opacity: 1;
+}
+
+/* Breathing animation on focus */
+.btn-leaf:focus {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 2px;
+    animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+.btn-icon {
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   6. MAIN LAYOUT
+   ============================================ */
+.main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    gap: var(--space-xl);
+    padding: var(--space-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    animation: contentGrow 0.6s ease-out 0.3s both;
+}
+
+@keyframes contentGrow {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   7. PANELS - Organic Blob Shapes
+   ============================================ */
+.panel {
+    position: relative;
+    animation: panelGrow 0.5s ease-out backwards;
+}
+
+.panel-status {
+    animation-delay: 0.4s;
+}
+
+.panel-history {
+    animation-delay: 0.5s;
+}
+
+@keyframes panelGrow {
+    from {
+        transform: translateY(40px) scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.panel-inner {
+    background: var(--color-cream);
+    padding: var(--space-lg);
+    border-radius: var(--radius-organic);
+    box-shadow: var(--shadow-soft);
+    height: fit-content;
+    position: relative;
+    transition: all var(--transition-smooth);
+}
+
+.panel-inner:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+/* Wavy edge effect using clip-path */
+.panel-inner::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 10%;
+    right: 10%;
+    height: 16px;
+    background: var(--color-leaf-light);
+    clip-path: url(#wavyEdge);
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+.panel-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--color-moss);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--color-leaf-light);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.panel-title::before {
+    content: '🌿';
+    font-size: 1rem;
+}
+
+/* ============================================
+   8. STATUS PANEL
+   ============================================ */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-earth-light);
+    border-radius: var(--radius-soft);
+    margin-bottom: var(--space-lg);
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--color-leaf);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(125, 143, 78, 0.4);
+    }
+    50% { 
+        transform: scale(1.1);
+        box-shadow: 0 0 0 8px rgba(125, 143, 78, 0);
+    }
+}
+
+.status-text {
+    font-weight: 500;
+    color: var(--color-moss);
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.player {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm);
+    border-radius: var(--radius-soft);
+    transition: background var(--transition-smooth);
+}
+
+.player:hover {
+    background: var(--color-earth-light);
+}
+
+.player-icon {
+    font-size: 1.5rem;
+}
+
+.player-name {
+    font-weight: 500;
+}
+
+.vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 24px;
+}
+
+.vine-decoration {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--color-leaf-light) 20%, 
+        var(--color-leaf) 50%, 
+        var(--color-leaf-light) 80%, 
+        transparent 100%
+    );
+    position: relative;
+}
+
+.vine-decoration::before {
+    content: '🌱';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8rem;
+    background: var(--color-cream);
+    padding: 0 var(--space-xs);
+}
+
+/* ============================================
+   9. CHESSBOARD CONTAINER
+   ============================================ */
+.board-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    animation: boardGrow 0.6s ease-out 0.45s both;
+}
+
+@keyframes boardGrow {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.chessboard {
+    /* Board styling remains unchanged as per constraints */
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1;
+    background: var(--color-cream);
+    border-radius: var(--radius-soft);
+    box-shadow: var(--shadow-soft);
+}
+
+.board-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--color-text-muted);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    gap: var(--space-sm);
+}
+
+.board-note {
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+/* ============================================
+   10. MOVE HISTORY PANEL
+   ============================================ */
+.move-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: var(--space-sm);
+}
+
+/* Custom scrollbar */
+.move-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.move-list::-webkit-scrollbar-track {
+    background: var(--color-earth-light);
+    border-radius: 4px;
+}
+
+.move-list::-webkit-scrollbar-thumb {
+    background: var(--color-leaf);
+    border-radius: 4px;
+}
+
+.move-list::-webkit-scrollbar-thumb:hover {
+    background: var(--color-moss);
+}
+
+.move-item {
+    display: grid;
+    grid-template-columns: 2rem 1fr 1fr;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    border-radius: var(--radius-soft);
+    transition: background var(--transition-smooth);
+}
+
+.move-item:hover {
+    background: var(--color-earth-light);
+}
+
+.move-number {
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.move-white,
+.move-black {
+    font-family: var(--font-body);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: 4px;
+    text-align: center;
+}
+
+.move-white {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--color-earth);
+}
+
+.move-black {
+    background: var(--color-bark);
+    color: var(--color-cream);
+}
+
+/* Branch/Vine Separator */
+.branch-separator {
+    height: 20px;
+    position: relative;
+    margin: var(--space-xs) 0;
+}
+
+.branch-separator::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, 
+        var(--color-leaf-light) 0%, 
+        var(--color-leaf) 50%, 
+        var(--color-leaf-light) 100%
+    );
+}
+
+.branch-separator::after {
+    content: '🌿';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.6);
+    font-size: 1rem;
+    background: var(--color-cream);
+}
+
+/* ============================================
+   11. AI THINKING INDICATOR
+   ============================================ */
+.ai-thinking {
+    position: fixed;
+    bottom: var(--space-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-cream);
+    padding: var(--space-md) var(--space-xl);
+    border-radius: var(--radius-organic-alt);
+    box-shadow: var(--shadow-hover);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-smooth);
+}
+
+.ai-thinking.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.leaves-spinner {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.spinning-leaf {
+    font-size: 1.2rem;
+    animation: leafSpin 2s ease-in-out infinite;
+}
+
+.spinning-leaf:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.spinning-leaf:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes leafSpin {
+    0% { 
+        transform: rotate(0deg) translateY(0);
+        opacity: 1;
+    }
+    50% { 
+        transform: rotate(180deg) translateY(-5px);
+        opacity: 0.6;
+    }
+    100% { 
+        transform: rotate(360deg) translateY(0);
+        opacity: 1;
+    }
+}
+
+.thinking-text {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--color-moss);
+}
+
+/* ============================================
+   12. FOOTER
+   ============================================ */
+.footer {
+    background: var(--color-moss-dark);
+    padding: var(--space-lg);
+    text-align: center;
+    margin-top: auto;
+}
+
+.footer-text {
+    font-family: var(--font-display);
+    color: var(--color-earth);
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.branch-icon {
+    font-size: 1.2rem;
+    animation: treeSway 4s ease-in-out infinite;
+}
+
+@keyframes treeSway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+}
+
+/* ============================================
+   13. RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+    }
+    
+    .panel {
+        max-width: 400px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    
+    .board-container {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: var(--space-md);
+        text-align: center;
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+    }
+    
+    .nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .btn-leaf {
+        padding: var(--space-sm) var(--space-md);
+        font-size: 0.85rem;
+    }
+    
+    .main-content {
+        padding: var(--space-md);
+    }
+    
+    .panel-inner {
+        padding: var(--space-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .move-item {
+        grid-template-columns: 1.5rem 1fr 1fr;
+        font-size: 0.9rem;
+    }
+}
+
+/* ============================================
+   14. ACCESSIBILITY
+   ============================================ */
+/* High contrast focus states */
+*:focus-visible {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Screen reader only text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Ensure sufficient contrast for text */
+.move-black {
+    /* WCAG AA compliant contrast ratio */
+    color: #f5f2eb;
+}
+
+/* Focus indicator for interactive elements */
+button:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 3px;
+}

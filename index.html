@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copilot Chess - Forest Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Tree silhouette header background -->
+    <header class="header">
+        <div class="header-bg"></div>
+        <div class="header-content">
+            <h1 class="logo">
+                <span class="leaf-icon">🌿</span>
+                Copilot Chess
+            </h1>
+            <nav class="nav">
+                <button class="btn btn-leaf" aria-label="New game">
+                    <span class="btn-icon">🌱</span>
+                    New Game
+                </button>
+                <button class="btn btn-leaf" aria-label="Settings">
+                    <span class="btn-icon">🍃</span>
+                    Settings
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Game Status Panel -->
+        <aside class="panel panel-status">
+            <div class="panel-inner">
+                <h2 class="panel-title">Game Status</h2>
+                <div class="status-indicator" aria-live="polite">
+                    <span class="status-dot"></span>
+                    <span class="status-text">White to move</span>
+                </div>
+                <div class="player-info">
+                    <div class="player player-white">
+                        <span class="player-icon">♔</span>
+                        <span class="player-name">Player</span>
+                    </div>
+                    <div class="vs-divider">
+                        <span class="vine-decoration"></span>
+                    </div>
+                    <div class="player player-black">
+                        <span class="player-icon">♚</span>
+                        <span class="player-name">AI Copilot</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chessboard Container (unchanged styling for the actual board) -->
+        <section class="board-container" aria-label="Chess board">
+            <div class="chessboard" id="chessboard">
+                <!-- Chessboard placeholder - actual board would be rendered here -->
+                <div class="board-placeholder">
+                    <p>♟ Chessboard renders here ♟</p>
+                    <p class="board-note">(Board styling unchanged per constraints)</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Move History Panel -->
+        <aside class="panel panel-history">
+            <div class="panel-inner">
+                <h2 class="panel-title">Move History</h2>
+                <div class="move-list" role="log" aria-label="Move history">
+                    <div class="move-item">
+                        <span class="move-number">1.</span>
+                        <span class="move-white">e4</span>
+                        <span class="move-black">e5</span>
+                    </div>
+                    <div class="branch-separator" aria-hidden="true"></div>
+                    <div class="move-item">
+                        <span class="move-number">2.</span>
+                        <span class="move-white">Nf3</span>
+                        <span class="move-black">Nc6</span>
+                    </div>
+                    <div class="branch-separator" aria-hidden="true"></div>
+                    <div class="move-item">
+                        <span class="move-number">3.</span>
+                        <span class="move-white">Bb5</span>
+                        <span class="move-black">—</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- AI Thinking Indicator -->
+    <div class="ai-thinking" id="aiThinking" aria-hidden="true">
+        <div class="leaves-spinner">
+            <span class="spinning-leaf">🍂</span>
+            <span class="spinning-leaf">🍃</span>
+            <span class="spinning-leaf">🌿</span>
+        </div>
+        <span class="thinking-text">Copilot is thinking...</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer-text">
+            <span class="branch-icon">🌳</span>
+            Grown with care by GitHub Copilot
+            <span class="branch-icon">🌳</span>
+        </p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
