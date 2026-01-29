@@ -2,8 +2,7 @@ import express from 'express';
 import { Chess } from 'chess.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,23 +15,6 @@ app.use(express.static('public'));
 
 // Store active games
 const games = new Map();
-
-// MCP Client for Copilot integration
-let mcpClient = null;
-
-// Initialize MCP client
-async function initializeMCPClient() {
-  try {
-    // Note: This is a placeholder. In a real implementation, you would
-    // connect to an actual MCP server. For this demo, we'll use the
-    // chess.js engine directly with different difficulty strategies.
-    console.log('MCP Client initialization placeholder');
-    return true;
-  } catch (error) {
-    console.error('Failed to initialize MCP client:', error);
-    return false;
-  }
-}
 
 // Chess AI with different difficulty levels
 class ChessAI {
@@ -157,7 +139,14 @@ class ChessAI {
 // Create new game
 app.post('/api/game/new', (req, res) => {
   const { difficulty = 'intermediate' } = req.body;
-  const gameId = Date.now().toString();
+  
+  // Validate difficulty
+  const validDifficulties = ['easy', 'intermediate', 'difficult'];
+  if (!validDifficulties.includes(difficulty)) {
+    return res.status(400).json({ error: 'Invalid difficulty level' });
+  }
+  
+  const gameId = crypto.randomUUID();
   const chess = new Chess();
   const ai = new ChessAI(difficulty);
   
@@ -228,6 +217,11 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     
     // AI makes a move
     const aiMove = await ai.getBestMove(chess);
+    
+    if (!aiMove) {
+      return res.status(500).json({ error: 'AI failed to generate a move' });
+    }
+    
     chess.move(aiMove);
     
     res.json({
@@ -262,10 +256,8 @@ app.get('/api/game/:gameId/moves/:square', (req, res) => {
   });
 });
 
-// Initialize and start server
-initializeMCPClient().then(() => {
-  app.listen(port, () => {
-    console.log(`🎮 Chess game server running on http://localhost:${port}`);
-    console.log(`♟️  Ready to play against Copilot!`);
-  });
+// Start server
+app.listen(port, () => {
+  console.log(`🎮 Chess game server running on http://localhost:${port}`);
+  console.log(`♟️  Ready to play against Copilot!`);
 });

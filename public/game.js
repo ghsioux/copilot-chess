@@ -149,7 +149,8 @@ async function handleSquareClick(square, piece) {
 
 // Check if piece is white
 function isPieceWhite(piece) {
-  return piece === piece.toUpperCase() && pieces[piece];
+  const whitePieces = ['K', 'Q', 'R', 'B', 'N', 'P'];
+  return whitePieces.includes(piece);
 }
 
 // Select a square
@@ -218,6 +219,7 @@ async function makeMove(move) {
     if (data.error) {
       alert(data.error);
       deselectSquare();
+      turnIndicator.textContent = 'Your turn (White)';
       return;
     }
 
@@ -252,6 +254,7 @@ async function makeMove(move) {
     console.error('Error making move:', error);
     alert('Failed to make move. Please try again.');
     deselectSquare();
+    turnIndicator.textContent = 'Your turn (White)';
   }
 }
 
@@ -260,36 +263,3 @@ function disableBoard() {
   chessBoard.style.pointerEvents = 'none';
   chessBoard.style.opacity = '0.6';
 }
-
-// Add some Easter eggs and fun messages
-const funMessages = [
-  "🤖 Beep boop... calculating world domination... I mean, chess moves!",
-  "🧠 AI neurons firing at maximum capacity!",
-  "♟️ To castle or not to castle, that is the question...",
-  "🎯 Targeting your king like a heat-seeking missile!",
-  "☕ Processing... might need more coffee...",
-  "🚀 Engaging warp speed thinking!",
-  "🎲 Rolling the dice... wait, wrong game!"
-];
-
-// Random fun message on game start
-function showRandomMessage() {
-  const message = funMessages[Math.floor(Math.random() * funMessages.length)];
-  const messageEl = document.createElement('div');
-  messageEl.textContent = message;
-  messageEl.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; font-size: 1.2rem; z-index: 1000; animation: fadeOut 3s forwards;';
-  document.body.appendChild(messageEl);
-  setTimeout(() => messageEl.remove(), 3000);
-}
-
-// Add CSS animation for messages
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeOut {
-    0% { opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-`;
-document.head.appendChild(style);
