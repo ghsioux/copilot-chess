@@ -120,7 +120,7 @@ async function startNewGame() {
     updateBoardLabels();
     
     const colorName = playerColor === 'white' ? 'White' : 'Black';
-    gameStatus.textContent = `🎮 Game started! You play ${colorName}!`;
+    gameStatus.textContent = '';
     moveHistory.innerHTML = '';
 
     // Render board immediately
@@ -588,7 +588,7 @@ function updateStatus(data) {
     gameStatus.innerHTML = '⚠️ Check! ⚠️';
     turnIndicator.textContent = `Your turn (${colorName})`;
   } else {
-    gameStatus.innerHTML = '🎮 Game in progress';
+    gameStatus.innerHTML = '';
     turnIndicator.textContent = `Your turn (${colorName})`;
   }
 }

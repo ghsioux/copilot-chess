@@ -229,6 +229,12 @@ header h1 {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+#gameStatus:empty {
+  display: none;
 }
 
 .turn-indicator {
@@ -480,41 +486,39 @@ header h1 {
   border-radius: 50%;
 }
 
-.board-coordinates {
-  position: relative;
-  margin-top: 10px;
+.board-with-coordinates {
+  display: flex;
+  align-items: stretch;
 }
 
 .coordinates-files {
   display: flex;
   justify-content: space-around;
-  padding-left: 45px;
-  padding-right: 45px;
+  margin-left: 25px;
+  margin-top: 5px;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .coordinates-files span {
-  width: 80px;
+  width: 90px;
   text-align: center;
 }
 
 .coordinates-ranks {
-  position: absolute;
-  left: -30px;
-  top: -730px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 720px;
+  padding-right: 8px;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .coordinates-ranks span {
-  height: 80px;
+  height: 90px;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 /* Footer */
@@ -545,16 +549,12 @@ footer {
     width: 60px;
   }
 
-  .coordinates-ranks {
-    top: -490px;
-    height: 480px;
-  }
-
-  .board-label-top { top: -24px; }
-  .board-label-bottom { bottom: -24px; }
-
   .coordinates-ranks span {
     height: 60px;
+  }
+
+  .coordinates-files {
+    margin-left: 25px;
   }
 
   .game-container {
@@ -583,13 +583,12 @@ footer {
     width: 45px;
   }
 
-  .coordinates-ranks {
-    top: -370px;
-    height: 360px;
-  }
-
   .coordinates-ranks span {
     height: 45px;
+  }
+
+  .coordinates-files {
+    margin-left: 25px;
   }
 }
 

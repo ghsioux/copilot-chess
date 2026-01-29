@@ -35,10 +35,8 @@
       <div class="game-info">
         <div class="info-panel">
           <div class="status-box">
-            <h3>📊 Game Status</h3>
-            <div id="gameStatus">Ready to play!</div>
+            <div id="gameStatus" class="game-status-message"></div>
             <div id="turnIndicator" class="turn-indicator">Your turn (White)</div>
-            <div id="playerSide" class="player-side">Vous jouez les Blancs (vous commencez)</div>
           </div>
           
           <div class="difficulty-display">
@@ -64,19 +62,18 @@
 
       <div class="chess-board-container">
         <div class="board-label board-label-top">IA (Noirs)</div>
-        <div id="chessBoard" class="chess-board"></div>
-        <div class="board-coordinates">
-        </div>
-        <div class="board-label board-label-bottom">Vous (Blancs)</div>
-          <div class="coordinates-files">
-            <span>a</span><span>b</span><span>c</span><span>d</span>
-            <span>e</span><span>f</span><span>g</span><span>h</span>
-          </div>
+        <div class="board-with-coordinates">
           <div class="coordinates-ranks">
             <span>8</span><span>7</span><span>6</span><span>5</span>
             <span>4</span><span>3</span><span>2</span><span>1</span>
           </div>
+          <div id="chessBoard" class="chess-board"></div>
         </div>
+        <div class="coordinates-files">
+          <span>a</span><span>b</span><span>c</span><span>d</span>
+          <span>e</span><span>f</span><span>g</span><span>h</span>
+        </div>
+        <div class="board-label board-label-bottom">Vous (Blancs)</div>
       </div>
     </div>
 
