@@ -83,6 +83,43 @@ header h1 {
   justify-content: center;
 }
 
+.model-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+  align-items: stretch;
+}
+
+.model-label {
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: left;
+  opacity: 0.85;
+}
+
+.model-select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 12px;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.model-select:focus {
+  outline: none;
+  border-color: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.model-select option {
+  color: #111;
+}
+
 .difficulty-btn {
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -144,6 +181,13 @@ header h1 {
 
 .start-btn:active {
   transform: scale(0.98);
+}
+
+.start-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Game Container */
@@ -270,24 +314,69 @@ header h1 {
 }
 
 .chess-board {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(8, 80px);
-  grid-template-rows: repeat(8, 80px);
+  grid-template-columns: repeat(8, 90px);
+  grid-template-rows: repeat(8, 90px);
   border: 5px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
   background: #fff;
 }
 
 .square {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+  font-size: 3.8rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+}
+
+/* Last move highlighting */
+.square.last-move-from {
+  background-color: #aaa23a !important;
+  box-shadow: inset 0 0 0 4px rgba(80, 60, 20, 0.7);
+}
+
+.square.last-move-to {
+  background-color: #cdd26a !important;
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.6);
+}
+
+/* Animated piece ghost */
+.piece-ghost {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.8rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Board labels */
+.board-label {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+.board-label-top {
+  top: -30px;
+}
+
+.board-label-bottom {
+  bottom: -30px;
 }
 
 .square.light {
@@ -351,11 +440,11 @@ header h1 {
 .coordinates-ranks {
   position: absolute;
   left: -30px;
-  top: -650px;
+  top: -730px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 640px;
+  height: 720px;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.7);
 }
@@ -380,27 +469,30 @@ footer {
   }
 
   .chess-board {
-    grid-template-columns: repeat(8, 50px);
-    grid-template-rows: repeat(8, 50px);
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
   }
 
   .square {
-    width: 50px;
-    height: 50px;
-    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    font-size: 2.6rem;
   }
 
   .coordinates-files span {
-    width: 50px;
+    width: 60px;
   }
 
   .coordinates-ranks {
-    top: -410px;
-    height: 400px;
+    top: -490px;
+    height: 480px;
   }
 
+  .board-label-top { top: -24px; }
+  .board-label-bottom { bottom: -24px; }
+
   .coordinates-ranks span {
-    height: 50px;
+    height: 60px;
   }
 
   .game-container {
@@ -412,3 +504,31 @@ footer {
     flex-direction: column;
   }
 }
+
+@media (max-width: 480px) {
+  .chess-board {
+    grid-template-columns: repeat(8, 45px);
+    grid-template-rows: repeat(8, 45px);
+  }
+
+  .square {
+    width: 45px;
+    height: 45px;
+    font-size: 2rem;
+  }
+
+  .coordinates-files span {
+    width: 45px;
+  }
+
+  .coordinates-ranks {
+    top: -370px;
+    height: 360px;
+  }
+
+  .coordinates-ranks span {
+    height: 45px;
+  }
+}
+
+/* test marker */

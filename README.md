@@ -4,10 +4,7 @@ A fun and nerdy chess game where you battle against an AI powered by chess algor
 
 ## 🎮 Features
 
-- **Three Difficulty Levels**:
-  - 🟢 **Easy**: Copilot is having a coffee break (mostly random moves)
-  - 🟡 **Intermediate**: Copilot is warming up (balanced strategy)
-  - 🔴 **Difficult**: Copilot means business (advanced minimax algorithm)
+- **Choose Your Model**: Select any available Copilot model from a dropdown (listed via `@github/copilot-sdk`).
 
 - **Fun & Nerdy UI**: Terminal-inspired design with emoji indicators and playful messages
 - **Full Chess Rules**: Complete chess game implementation using chess.js
@@ -18,8 +15,10 @@ A fun and nerdy chess game where you battle against an AI powered by chess algor
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v18 or higher)
 - npm
+- GitHub Copilot CLI installé et authentifié (`copilot --version`)
+- Abonnement GitHub Copilot valide
 
 ### Installation
 
@@ -46,7 +45,7 @@ http://localhost:3000
 
 ## 🎯 How to Play
 
-1. Select your preferred difficulty level (Easy, Intermediate, or Difficult)
+1. Select a model to play against
 2. Click "START BATTLE" to begin the game
 3. Click on a piece to see its legal moves (highlighted in green)
 4. Click on a highlighted square to make your move
@@ -57,7 +56,7 @@ http://localhost:3000
 
 - **Backend**: Node.js with Express
 - **Chess Engine**: chess.js
-- **AI**: Custom minimax algorithm with alpha-beta pruning
+- **AI**: GitHub Copilot via `@github/copilot-sdk` (user-selected model; no fallback)
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
 - **Design**: Retro terminal aesthetic with gradient backgrounds
 
@@ -85,11 +84,21 @@ copilot-chess/
 
 ## 🤖 AI Implementation
 
-The AI uses different strategies based on difficulty:
+- **Backend**: GitHub Copilot SDK (`@github/copilot-sdk`)
+- **Modèle**: choisi par l’utilisateur via la liste `listModels` du SDK
+- **Aucun fallback**: Si Copilot échoue, la requête échoue.
+- **Sessions**: Une session Copilot par partie, prompt orienté moteur d’échecs.
 
-- **Easy**: 70% random moves, 30% calculated best moves
-- **Intermediate**: 30% random moves, 70% calculated moves with depth-2 search
-- **Difficult**: Always chooses best move with depth-3 minimax search and alpha-beta pruning
+### Prérequis Copilot CLI
+
+```bash
+copilot --version
+copilot auth login
+```
+
+### Variables d’environnement
+
+Aucune variable requise pour le modèle (sélection via UI).
 
 ## 🔧 Development
 

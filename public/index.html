@@ -16,26 +16,13 @@
     <div class="game-setup" id="gameSetup">
       <div class="setup-card">
         <h2>🎮 Choose Your Destiny</h2>
-        <p class="setup-subtitle">Select difficulty level and prepare for battle!</p>
+        <p class="setup-subtitle">Select a model and prepare for battle!</p>
         
-        <div class="difficulty-selector">
-          <button class="difficulty-btn" data-difficulty="easy">
-            <div class="difficulty-icon">😊</div>
-            <div class="difficulty-name">EASY</div>
-            <div class="difficulty-desc">Copilot is having a coffee break</div>
-          </button>
-          
-          <button class="difficulty-btn selected" data-difficulty="intermediate">
-            <div class="difficulty-icon">🤔</div>
-            <div class="difficulty-name">INTERMEDIATE</div>
-            <div class="difficulty-desc">Copilot is warming up</div>
-          </button>
-          
-          <button class="difficulty-btn" data-difficulty="difficult">
-            <div class="difficulty-icon">😈</div>
-            <div class="difficulty-name">DIFFICULT</div>
-            <div class="difficulty-desc">Copilot means business</div>
-          </button>
+        <div class="model-selector">
+          <label for="modelSelect" class="model-label">Choose a model:</label>
+          <select id="modelSelect" class="model-select">
+            <option value="" disabled selected>Loading models...</option>
+          </select>
         </div>
 
         <button id="startGameBtn" class="start-btn">
@@ -51,10 +38,11 @@
             <h3>📊 Game Status</h3>
             <div id="gameStatus">Ready to play!</div>
             <div id="turnIndicator" class="turn-indicator">Your turn (White)</div>
+            <div id="playerSide" class="player-side">Vous jouez les Blancs (vous commencez)</div>
           </div>
           
           <div class="difficulty-display">
-            <strong>Difficulty:</strong> <span id="currentDifficulty">Intermediate</span>
+            <strong>Model:</strong> <span id="currentDifficulty">-</span>
           </div>
 
           <div class="move-history">
@@ -65,6 +53,9 @@
           <button id="newGameBtn" class="action-btn">
             🔄 New Game
           </button>
+          <button id="flipBoardBtn" class="action-btn">
+            🔄 Flip Board
+          </button>
           <button id="resignBtn" class="action-btn resign-btn">
             🏳️ Resign
           </button>
@@ -72,8 +63,11 @@
       </div>
 
       <div class="chess-board-container">
+        <div class="board-label board-label-top">IA (Noirs)</div>
         <div id="chessBoard" class="chess-board"></div>
         <div class="board-coordinates">
+        </div>
+        <div class="board-label board-label-bottom">Vous (Blancs)</div>
           <div class="coordinates-files">
             <span>a</span><span>b</span><span>c</span><span>d</span>
             <span>e</span><span>f</span><span>g</span><span>h</span>
@@ -91,6 +85,7 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.4.0/dist/chess.min.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import express from 'express';
 import { Chess } from 'chess.js';
+import { CopilotClient } from '@github/copilot-sdk';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import crypto from 'crypto';
@@ -16,149 +17,125 @@ app.use(express.static('public'));
 // Store active games
 const games = new Map();
 
-// Chess AI with different difficulty levels
-class ChessAI {
-  constructor(difficulty = 'intermediate') {
-    this.difficulty = difficulty;
+const copilotClient = new CopilotClient();
+let copilotStartError = null;
+const copilotReady = (async () => {
+  try {
+    await copilotClient.start();
+    console.log(`🤖 Copilot client started`);
+  } catch (err) {
+    copilotStartError = err;
+    console.error('❌ Failed to start Copilot client:', err);
   }
+})();
 
-  // Evaluate a position (simple material count)
-  evaluatePosition(chess) {
-    const pieceValues = {
-      p: 1, n: 3, b: 3, r: 5, q: 9, k: 0,
-      P: -1, N: -3, B: -3, R: -5, Q: -9, K: 0
-    };
-
-    let score = 0;
-    const board = chess.board();
-    
-    for (let row of board) {
-      for (let square of row) {
-        if (square) {
-          score += pieceValues[square.type] * (square.color === 'b' ? 1 : -1);
-        }
-      }
-    }
-    return score;
+const DEFAULT_MODEL = 'GPT-4.1';
+let availableModels = [];
+const modelsReady = (async () => {
+  await copilotReady;
+  try {
+    availableModels = await copilotClient.listModels();
+    console.log(`📊 Available models: ${availableModels.map(m => m.name).join(', ')}`);
+  } catch (err) {
+    console.error('❌ Failed to list Copilot models:', err);
+    availableModels = [];
   }
+  return availableModels;
+})();
 
-  // Get best move based on difficulty
-  async getBestMove(chess) {
-    const moves = chess.moves({ verbose: true });
-    
-    if (moves.length === 0) return null;
+const resolveModel = (name) => {
+  if (!availableModels.length) return DEFAULT_MODEL;
+  const defaultName = availableModels.find(m => m.name === DEFAULT_MODEL)?.name || availableModels[0]?.name || DEFAULT_MODEL;
+  if (!name) return defaultName;
+  return availableModels.find(m => m.name === name)?.name || defaultName;
+};
 
-    if (this.difficulty === 'easy') {
-      return this.getEasyMove(moves, chess);
-    } else if (this.difficulty === 'intermediate') {
-      return this.getIntermediateMove(moves, chess);
-    } else {
-      return this.getDifficultMove(moves, chess);
-    }
+const getModelNames = () => availableModels.map(m => m.name);
+
+async function createCopilotSession(modelName = DEFAULT_MODEL) {
+  await modelsReady;
+  await copilotReady;
+  if (copilotStartError) throw copilotStartError;
+  
+  const model = resolveModel(modelName);
+  console.log(`🎮 Creating session with model: ${model}`);
+  
+  return copilotClient.createSession({
+    model,
+    systemMessage: {
+      content: `You are a chess engine playing as black. You receive the current FEN and the list of legal moves. Respond with exactly one legal move in SAN from the provided list. Do not explain. Output only the SAN.`
+    },
+  });
+}
+
+async function getCopilotMove(session, chessInstance) {
+  const legalMovesVerbose = chessInstance.moves({ verbose: true });
+  if (!legalMovesVerbose.length) throw new Error('No legal moves');
+
+  const sans = legalMovesVerbose.map(m => m.san);
+  const ucis = legalMovesVerbose.map(m => `${m.from}${m.to}${m.promotion || ''}`);
+
+  const prompt = [
+    'You are Black to move.',
+    `FEN: ${chessInstance.fen()}`,
+    `Legal moves (SAN): ${sans.join(', ')}`,
+    `Legal moves (UCI): ${ucis.join(', ')}`,
+    'Return exactly one legal move in SAN, chosen from the SAN list above.',
+  ].join('\n');
+
+  const response = await session.sendAndWait({ prompt });
+  const content = (response?.data?.content || '').trim();
+  const aiSan = content.split(/\s+/)[0]?.trim();
+  if (!aiSan) throw new Error('Empty response from Copilot');
+  if (!sans.includes(aiSan)) {
+    throw new Error(`Copilot returned illegal move (not in SAN list): ${aiSan}`);
   }
-
-  // Easy: Random moves with occasional good moves
-  getEasyMove(moves, chess) {
-    // 70% random, 30% best move
-    if (Math.random() < 0.7) {
-      return moves[Math.floor(Math.random() * moves.length)].san;
-    }
-    return this.findBestMove(moves, chess, 1);
-  }
-
-  // Intermediate: Mix of good moves with some randomness
-  getIntermediateMove(moves, chess) {
-    // 30% random, 70% best move with shallow search
-    if (Math.random() < 0.3) {
-      return moves[Math.floor(Math.random() * moves.length)].san;
-    }
-    return this.findBestMove(moves, chess, 2);
-  }
-
-  // Difficult: Always try to find the best move
-  getDifficultMove(moves, chess) {
-    return this.findBestMove(moves, chess, 3);
-  }
-
-  // Minimax algorithm to find best move
-  findBestMove(moves, chess, depth) {
-    let bestMove = null;
-    let bestValue = -Infinity;
-
-    for (let move of moves) {
-      const tempChess = new Chess(chess.fen());
-      tempChess.move(move.san);
-      
-      const value = this.minimax(tempChess, depth - 1, -Infinity, Infinity, false);
-      
-      if (value > bestValue) {
-        bestValue = value;
-        bestMove = move.san;
-      }
-    }
-
-    return bestMove || moves[0].san;
-  }
-
-  // Minimax with alpha-beta pruning
-  minimax(chess, depth, alpha, beta, maximizing) {
-    if (depth === 0 || chess.isGameOver()) {
-      return this.evaluatePosition(chess);
-    }
-
-    const moves = chess.moves({ verbose: true });
-
-    if (maximizing) {
-      let maxEval = -Infinity;
-      for (let move of moves) {
-        const tempChess = new Chess(chess.fen());
-        tempChess.move(move.san);
-        const eval_ = this.minimax(tempChess, depth - 1, alpha, beta, false);
-        maxEval = Math.max(maxEval, eval_);
-        alpha = Math.max(alpha, eval_);
-        if (beta <= alpha) break;
-      }
-      return maxEval;
-    } else {
-      let minEval = Infinity;
-      for (let move of moves) {
-        const tempChess = new Chess(chess.fen());
-        tempChess.move(move.san);
-        const eval_ = this.minimax(tempChess, depth - 1, alpha, beta, true);
-        minEval = Math.min(minEval, eval_);
-        beta = Math.min(beta, eval_);
-        if (beta <= alpha) break;
-      }
-      return minEval;
-    }
-  }
+  return aiSan;
 }
 
 // API Routes
 
-// Create new game
-app.post('/api/game/new', (req, res) => {
-  const { difficulty = 'intermediate' } = req.body;
-  
-  // Validate difficulty
-  const validDifficulties = ['easy', 'intermediate', 'difficult'];
-  if (!validDifficulties.includes(difficulty)) {
-    return res.status(400).json({ error: 'Invalid difficulty level' });
+// List available models
+app.get('/api/models', async (req, res) => {
+  try {
+    await modelsReady;
+    if (!availableModels.length) {
+      return res.status(500).json({ error: 'No models available' });
+    }
+    res.json({ models: availableModels.map(m => ({ name: m.name, id: m.id || null })) });
+  } catch (error) {
+    console.error('Error listing models:', error);
+    res.status(500).json({ error: 'Failed to list models' });
   }
+});
+
+// Create new game
+app.post('/api/game/new', async (req, res) => {
+  const { model } = req.body;
   
-  const gameId = crypto.randomUUID();
-  const chess = new Chess();
-  const ai = new ChessAI(difficulty);
-  
-  games.set(gameId, { chess, ai, difficulty });
-  
-  res.json({
-    gameId,
-    fen: chess.fen(),
-    difficulty,
-    isGameOver: false,
-    turn: 'white'
-  });
+  try {
+    await modelsReady;
+    const modelName = resolveModel(model);
+    if (!modelName) {
+      return res.status(500).json({ error: 'No usable model found' });
+    }
+    const gameId = crypto.randomUUID();
+    const chess = new Chess();
+    const session = await createCopilotSession(modelName);
+    
+    games.set(gameId, { chess, session, model: modelName });
+    
+    res.json({
+      gameId,
+      fen: chess.fen(),
+      model: modelName,
+      isGameOver: false,
+      turn: 'white'
+    });
+  } catch (error) {
+    console.error('Error creating game session:', error);
+    res.status(500).json({ error: 'Failed to start Copilot session' });
+  }
 });
 
 // Get game state
@@ -170,11 +147,12 @@ app.get('/api/game/:gameId', (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   
-  const { chess } = game;
+  const { chess, model } = game;
   
   res.json({
     fen: chess.fen(),
     pgn: chess.pgn(),
+    model,
     isGameOver: chess.isGameOver(),
     isCheck: chess.isCheck(),
     isCheckmate: chess.isCheckmate(),
@@ -194,7 +172,7 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   
-  const { chess, ai } = game;
+  const { chess, session, model } = game;
   
   try {
     // Make player move
@@ -203,31 +181,52 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     if (!result) {
       return res.status(400).json({ error: 'Invalid move' });
     }
+
+    const playerMove = {
+      san: result.san,
+      from: result.from,
+      to: result.to,
+      color: result.color
+    };
+
+    const fenAfterPlayer = chess.fen();
     
     // Check if game is over after player move
     if (chess.isGameOver()) {
       return res.json({
         fen: chess.fen(),
+        fenAfterPlayer,
         isGameOver: true,
         isCheckmate: chess.isCheckmate(),
         isDraw: chess.isDraw(),
-        playerMove: result.san
+        playerMove
       });
     }
     
-    // AI makes a move
-    const aiMove = await ai.getBestMove(chess);
+    // Copilot makes a move (with timing)
+    const aiStartTime = Date.now();
+    const aiMoveSan = await getCopilotMove(session, chess);
+    const aiThinkTime = Date.now() - aiStartTime;
     
-    if (!aiMove) {
-      return res.status(500).json({ error: 'AI failed to generate a move' });
+    const aiResult = chess.move(aiMoveSan);
+    if (!aiResult) {
+      throw new Error(`Copilot returned illegal move: ${aiMoveSan}`);
     }
-    
-    chess.move(aiMove);
+
+    const aiMove = {
+      san: aiResult.san,
+      from: aiResult.from,
+      to: aiResult.to,
+      color: aiResult.color
+    };
     
     res.json({
       fen: chess.fen(),
-      playerMove: result.san,
-      aiMove: aiMove,
+      fenAfterPlayer,
+      playerMove,
+      aiMove,
+      aiThinkTime,
+      model,
       isGameOver: chess.isGameOver(),
       isCheck: chess.isCheck(),
       isCheckmate: chess.isCheckmate(),
@@ -235,6 +234,7 @@ app.post('/api/game/:gameId/move', async (req, res) => {
       turn: chess.turn() === 'w' ? 'white' : 'black'
     });
   } catch (error) {
+    console.error('Copilot move error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -260,4 +260,19 @@ app.get('/api/game/:gameId/moves/:square', (req, res) => {
 app.listen(port, () => {
   console.log(`🎮 Chess game server running on http://localhost:${port}`);
   console.log(`♟️  Ready to play against Copilot!`);
+});
+
+const shutdown = async () => {
+  try {
+    await copilotClient.stop();
+    console.log('🛑 Copilot client stopped');
+  } catch (err) {
+    console.error('Error stopping Copilot client:', err);
+  }
+  process.exit(0);
+};
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+process.on('exit', () => {
+  // best-effort sync stop
 });
