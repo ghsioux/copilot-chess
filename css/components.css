@@ -171,6 +171,24 @@
     box-shadow: var(--shadow-gold-strong);
 }
 
+/* Disabled Button State */
+.btn-deco:disabled,
+.btn-deco[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-deco:disabled:hover,
+.btn-deco[aria-disabled="true"]:hover {
+    color: var(--color-ivory);
+    box-shadow: none;
+}
+
+.btn-deco:disabled::after,
+.btn-deco[aria-disabled="true"]::after {
+    transform: scaleX(0);
+}
+
 /* Accent Button Variant */
 .btn-deco-accent {
     background: var(--color-gold);
@@ -187,6 +205,8 @@
 
 .btn-icon {
     font-size: var(--font-size-base);
+    position: relative;
+    z-index: 1;
 }
 
 .btn-text {
@@ -451,11 +471,26 @@
     gap: var(--space-sm);
 }
 
+.ai-thinking.hidden {
+    display: none;
+}
+
 .thinking-text {
     font-size: var(--font-size-xs);
     letter-spacing: var(--letter-spacing-widest);
     color: var(--color-ivory);
     opacity: 0.6;
+}
+
+.ai-ready {
+    text-align: center;
+}
+
+.ready-text {
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-widest);
+    color: var(--color-emerald);
+    opacity: 0.8;
 }
 
 /* ═══════════════════════════════════════════════════

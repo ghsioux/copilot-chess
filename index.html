@@ -157,21 +157,7 @@
                     </div>
                     <div class="panel-content">
                         <div class="move-history" id="move-history">
-                            <div class="move-item">
-                                <span class="move-number">1.</span>
-                                <span class="move-white">e4</span>
-                                <span class="move-black">e5</span>
-                            </div>
-                            <div class="move-item">
-                                <span class="move-number">2.</span>
-                                <span class="move-white">Nf3</span>
-                                <span class="move-black">Nc6</span>
-                            </div>
-                            <div class="move-item">
-                                <span class="move-number">3.</span>
-                                <span class="move-white">Bb5</span>
-                                <span class="move-black">—</span>
-                            </div>
+                            <!-- Move history will be populated by JavaScript -->
                         </div>
                     </div>
                     <div class="panel-separator">
@@ -181,11 +167,14 @@
                     </div>
                     <div class="ai-status">
                         <span class="ai-label">AI ENGINE</span>
-                        <div class="ai-thinking" id="ai-thinking">
-                            <div class="geometric-spinner" aria-label="AI is thinking">
+                        <div class="ai-thinking hidden" id="ai-thinking" aria-hidden="true">
+                            <div class="geometric-spinner" role="status" aria-live="polite" aria-busy="true">
                                 <div class="spinner-triangle"></div>
                             </div>
                             <span class="thinking-text">ANALYZING</span>
+                        </div>
+                        <div class="ai-ready" id="ai-ready">
+                            <span class="ready-text">READY</span>
                         </div>
                     </div>
                 </div>
@@ -194,19 +183,19 @@
 
         <!-- Game Controls -->
         <nav class="controls-bar">
-            <button class="btn-deco" type="button">
+            <button class="btn-deco" type="button" onclick="chessGame.reset()" aria-label="Start new game">
                 <span class="btn-icon">▶</span>
                 <span class="btn-text">NEW GAME</span>
             </button>
-            <button class="btn-deco" type="button">
+            <button class="btn-deco" type="button" disabled aria-disabled="true" aria-label="Undo last move">
                 <span class="btn-icon">↩</span>
                 <span class="btn-text">UNDO</span>
             </button>
-            <button class="btn-deco" type="button">
+            <button class="btn-deco" type="button" disabled aria-disabled="true" aria-label="Game settings">
                 <span class="btn-icon">⚙</span>
                 <span class="btn-text">SETTINGS</span>
             </button>
-            <button class="btn-deco btn-deco-accent" type="button">
+            <button class="btn-deco btn-deco-accent" type="button" disabled aria-disabled="true" aria-label="Play against AI">
                 <span class="btn-icon">⚔</span>
                 <span class="btn-text">VS AI</span>
             </button>
