@@ -237,6 +237,22 @@ header h1 {
   border-radius: 5px;
   font-weight: bold;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.copilot-icon {
+  width: 1.3em;
+  height: 1.3em;
+  vertical-align: middle;
+  animation: copilotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes copilotPulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
 .difficulty-display {
