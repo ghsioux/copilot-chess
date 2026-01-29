@@ -11,6 +11,10 @@ let game = null;
 let board = null;
 let moveCount = 0;
 let gameOver = false;
+let aiMoveTimeout = null;
+let statusHideTimeout = null;
+let confettiAnimationFrame = null;
+let listenersInitialized = false;
 
 // ==========================================================================
 // DOM Elements
@@ -56,14 +60,18 @@ function initGame() {
     // Reset state
     moveCount = 0;
     gameOver = false;
+    clearTimeouts();
     updateMoveCount();
     updateTurnIndicator();
     clearMoveHistory();
     hideGameStatus();
     
-    // Bind event listeners
-    elements.newGameBtn.addEventListener('click', newGame);
-    elements.undoBtn.addEventListener('click', undoMove);
+    // Bind event listeners only once
+    if (!listenersInitialized) {
+        elements.newGameBtn.addEventListener('click', newGame);
+        elements.undoBtn.addEventListener('click', undoMove);
+        listenersInitialized = true;
+    }
 }
 
 // ==========================================================================
@@ -104,7 +112,7 @@ function onDrop(source, target) {
     if (checkGameState()) return;
     
     // AI's turn
-    setTimeout(makeAIMove, 500);
+    aiMoveTimeout = setTimeout(makeAIMove, 500);
 }
 
 function onSnapEnd() {
@@ -123,7 +131,12 @@ function makeAIMove() {
     // Simulate thinking time for better UX
     const thinkingTime = 800 + Math.random() * 700;
     
-    setTimeout(() => {
+    aiMoveTimeout = setTimeout(() => {
+        if (gameOver) {
+            hideAIThinking();
+            return;
+        }
+        
         const move = getBestMove();
         
         if (move) {
@@ -269,7 +282,6 @@ function addMoveToHistory(move, player) {
         emptyState.remove();
     }
     
-    const moveNum = Math.ceil(moveCount / 2);
     const playerEmoji = player === 'player' ? '👤' : '🤖';
     const moveText = formatMove(move);
     
@@ -288,11 +300,6 @@ function addMoveToHistory(move, player) {
 }
 
 function formatMove(move) {
-    const pieceNames = {
-        'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚',
-        'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔'
-    };
-    
     let text = move.san;
     
     // Add some context
@@ -311,10 +318,27 @@ function formatMove(move) {
 
 function showAIThinking() {
     elements.aiThinking.classList.remove('hidden');
+    elements.aiThinking.setAttribute('aria-hidden', 'false');
 }
 
 function hideAIThinking() {
     elements.aiThinking.classList.add('hidden');
+    elements.aiThinking.setAttribute('aria-hidden', 'true');
+}
+
+function clearTimeouts() {
+    if (aiMoveTimeout) {
+        clearTimeout(aiMoveTimeout);
+        aiMoveTimeout = null;
+    }
+    if (statusHideTimeout) {
+        clearTimeout(statusHideTimeout);
+        statusHideTimeout = null;
+    }
+    if (confettiAnimationFrame) {
+        cancelAnimationFrame(confettiAnimationFrame);
+        confettiAnimationFrame = null;
+    }
 }
 
 function showGameOver(result) {
@@ -333,6 +357,7 @@ function showGameOver(result) {
     elements.statusEmoji.textContent = msg.emoji;
     elements.statusText.textContent = msg.text;
     elements.gameStatus.classList.remove('hidden');
+    elements.gameStatus.setAttribute('aria-hidden', 'false');
     
     // Trigger confetti for victory
     if (result === 'victory') {
@@ -342,13 +367,14 @@ function showGameOver(result) {
     }
     
     // Auto-hide after delay
-    setTimeout(() => {
+    statusHideTimeout = setTimeout(() => {
         hideGameStatus();
     }, 3000);
 }
 
 function hideGameStatus() {
     elements.gameStatus.classList.add('hidden');
+    elements.gameStatus.setAttribute('aria-hidden', 'true');
     elements.statusEmoji.style.animation = 'wiggle 0.5s ease-in-out infinite';
 }
 
@@ -357,6 +383,9 @@ function hideGameStatus() {
 // ==========================================================================
 
 function newGame() {
+    // Clear any pending timeouts
+    clearTimeouts();
+    
     // Add button press feedback
     elements.newGameBtn.style.transform = 'scale(0.95)';
     setTimeout(() => {
@@ -376,6 +405,9 @@ function newGame() {
 
 function undoMove() {
     if (moveCount < 2) return;
+    
+    // Clear any pending AI move
+    clearTimeouts();
     
     // Undo both AI and player move
     game.undo();
@@ -400,6 +432,7 @@ function undoMove() {
     
     gameOver = false;
     hideGameStatus();
+    hideAIThinking();
 }
 
 // ==========================================================================
@@ -429,8 +462,6 @@ function triggerConfetti() {
         });
     }
     
-    let animationFrame;
-    
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
@@ -455,17 +486,21 @@ function triggerConfetti() {
         });
         
         if (!allDone) {
-            animationFrame = requestAnimationFrame(animate);
+            confettiAnimationFrame = requestAnimationFrame(animate);
         } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            confettiAnimationFrame = null;
         }
     }
     
-    animate();
+    confettiAnimationFrame = requestAnimationFrame(animate);
     
     // Clear after 5 seconds
     setTimeout(() => {
-        cancelAnimationFrame(animationFrame);
+        if (confettiAnimationFrame) {
+            cancelAnimationFrame(confettiAnimationFrame);
+            confettiAnimationFrame = null;
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }, 5000);
 }

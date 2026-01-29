@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,10 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     
     <!-- Chess.js and Chessboard.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-PbLsaSUHa4Oo/8NUfoTuSvXxIFafZDQ7jFZ0bE91EUBfmCrYvr8k2DH1haJdkWKqh3ZKRNcR3LKzpbCPPkTq7A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" crossorigin="anonymous"></script>
     
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -29,7 +29,7 @@
                 <span class="letter letter-1">C</span><span class="letter letter-2">o</span><span class="letter letter-3">p</span><span class="letter letter-4">i</span><span class="letter letter-5">l</span><span class="letter letter-6">o</span><span class="letter letter-7">t</span>
                 <span class="space"></span>
                 <span class="letter letter-8">C</span><span class="letter letter-9">h</span><span class="letter letter-10">e</span><span class="letter letter-11">s</span><span class="letter letter-12">s</span>
-                <span class="emoji">♟️</span>
+                <span class="emoji" aria-hidden="true">♟️</span>
             </h1>
             <p class="subtitle">Jouez contre l'IA - Amusez-vous!</p>
         </header>
@@ -43,17 +43,17 @@
                 
                 <div class="panel-content">
                     <!-- Turn Indicator Badge -->
-                    <div class="turn-indicator">
+                    <div class="turn-indicator" aria-live="polite" aria-atomic="true">
                         <div id="turn-badge" class="badge badge-sun">
-                            <span class="badge-emoji">🎯</span>
+                            <span class="badge-emoji" aria-hidden="true">🎯</span>
                             <span id="turn-text">Votre tour!</span>
                         </div>
                     </div>
 
                     <!-- Move Counter (Arcade Style) -->
-                    <div class="score-display">
-                        <div class="score-label">Coups joués</div>
-                        <div class="score-value" id="move-count">0</div>
+                    <div class="score-display" aria-live="polite">
+                        <div class="score-label" id="score-label">Coups joués</div>
+                        <div class="score-value" id="move-count" aria-labelledby="score-label">0</div>
                     </div>
 
                     <!-- AI Model Badge -->
@@ -79,15 +79,15 @@
             </aside>
 
             <!-- Chess Board Container -->
-            <section class="board-section bounce-in delay-2">
+            <section class="board-section bounce-in delay-2" aria-label="Échiquier de jeu">
                 <div class="board-wrapper toy-box">
-                    <div id="chessboard"></div>
+                    <div id="chessboard" role="application" aria-label="Échiquier interactif - glissez et déposez les pièces pour jouer"></div>
                 </div>
                 
                 <!-- AI Thinking Indicator -->
-                <div id="ai-thinking" class="ai-thinking hidden">
+                <div id="ai-thinking" class="ai-thinking hidden" role="status" aria-live="polite" aria-hidden="true">
                     <span class="thinking-text">🤔 L'IA réfléchit</span>
-                    <span class="thinking-dots">
+                    <span class="thinking-dots" aria-hidden="true">
                         <span class="dot">●</span>
                         <span class="dot">●</span>
                         <span class="dot">●</span>
@@ -102,9 +102,9 @@
                 </div>
                 
                 <div class="panel-content">
-                    <div id="move-history" class="move-history">
+                    <div id="move-history" class="move-history" role="log" aria-live="polite" aria-label="Historique des coups">
                         <div class="empty-history">
-                            <span class="empty-emoji">🎬</span>
+                            <span class="empty-emoji" aria-hidden="true">🎬</span>
                             <span>Faites le premier coup!</span>
                         </div>
                     </div>
@@ -113,9 +113,9 @@
         </main>
 
         <!-- Game Status Messages -->
-        <div id="game-status" class="game-status hidden">
+        <div id="game-status" class="game-status hidden" role="alertdialog" aria-live="assertive" aria-modal="true" aria-labelledby="status-text">
             <div class="status-content">
-                <span id="status-emoji" class="status-emoji">🎉</span>
+                <span id="status-emoji" class="status-emoji" aria-hidden="true">🎉</span>
                 <span id="status-text" class="status-text">Échec et mat!</span>
             </div>
         </div>
