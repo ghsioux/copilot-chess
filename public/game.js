@@ -14,6 +14,12 @@ let isAnimating = false;
 let lastMove = null; // { from: 'e2', to: 'e4' }
 let playerColor = 'white'; // 'white' or 'black'
 
+// Captured pieces tracking
+let capturedByPlayer = []; // Pieces captured by the player
+let capturedByAI = []; // Pieces captured by the AI
+const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+const pieceOrder = ['q', 'r', 'b', 'n', 'p']; // Order for display
+
 // History navigation
 let positionHistory = []; // Array of { fen, lastMove } for each position
 let historyIndex = -1; // Current position in history (-1 = not browsing)
@@ -106,6 +112,11 @@ async function startNewGame() {
     lastMove = null;
     playerColor = data.playerColor || 'white';
     
+    // Reset captured pieces
+    capturedByPlayer = [];
+    capturedByAI = [];
+    updateCapturedPiecesDisplay();
+    
     // Flip board if player is black (so their pieces are at bottom)
     isBoardFlipped = playerColor === 'black';
     
@@ -138,6 +149,13 @@ async function startNewGame() {
         const aiData = await aiResponse.json();
         
         if (aiData.aiMove) {
+          // Check if AI is capturing before animation
+          const aiTargetSquare = document.querySelector(`[data-square="${aiData.aiMove.to}"]`);
+          const aiCapturedPieceCode = aiTargetSquare?.dataset?.piece;
+          if (aiCapturedPieceCode) {
+            addCapturedPiece(aiCapturedPieceCode, false);
+          }
+          
           // Animate AI's first move
           await animateMove(aiData.aiMove.from, aiData.aiMove.to);
           lastMove = { from: aiData.aiMove.from, to: aiData.aiMove.to };
@@ -467,6 +485,14 @@ async function makeMove(from, to) {
   // Capture player time BEFORE animation and server call
   const playerTime = turnStartTime ? formatMoveTime(Date.now() - turnStartTime) : '';
 
+  // 0. Check if player is capturing a piece BEFORE animation
+  const targetSquare = document.querySelector(`[data-square="${to}"]`);
+  const capturedPieceCode = targetSquare?.dataset?.piece;
+  if (capturedPieceCode) {
+    // Player captured a piece - update immediately!
+    addCapturedPiece(capturedPieceCode, true);
+  }
+
   // 1. Animate player move first
   await animateMove(from, to);
 
@@ -497,6 +523,14 @@ async function makeMove(from, to) {
 
     // 4. Animate AI move if present
     if (data.aiMove?.from && data.aiMove?.to) {
+      // Check if AI is capturing before animation
+      const aiTargetSquare = document.querySelector(`[data-square="${data.aiMove.to}"]`);
+      const aiCapturedPieceCode = aiTargetSquare?.dataset?.piece;
+      if (aiCapturedPieceCode) {
+        // AI captured a piece - update immediately!
+        addCapturedPiece(aiCapturedPieceCode, false);
+      }
+      
       await animateMove(data.aiMove.from, data.aiMove.to);
       // Update to AI's move and re-render with new highlights
       lastMove = { from: data.aiMove.from, to: data.aiMove.to };
@@ -550,11 +584,10 @@ async function getCurrentFen() {
 // Update game status
 function updateStatus(data) {
   const colorName = playerColor === 'white' ? 'White' : 'Black';
-  // Player wins if it's the opponent's turn during checkmate (opponent is in checkmate, can't escape)
-  // data.turn indicates whose turn it is - if it's the opponent's turn and checkmate, they are the one mated
-  const opponentInCheckmate = (playerColor === 'white' && data.turn === 'black') || 
-                              (playerColor === 'black' && data.turn === 'white');
-  const playerWins = opponentInCheckmate;
+  // Determine who won: if player made the last move and it's checkmate, player wins
+  // If AI made the last move (aiMove exists) and it's checkmate, AI wins
+  const playerMadeLastMove = data.playerMadeLastMove || !data.aiMove;
+  const playerWins = playerMadeLastMove;
   
   if (data.isCheckmate) {
     gameStatus.innerHTML = playerWins ? '🎉 Checkmate! You win! 🎉' : '😢 Checkmate! AI wins! 😢';
@@ -641,3 +674,74 @@ document.addEventListener('keydown', (e) => {
     navigateHistory('forward');
   }
 });
+
+// Captured pieces functions
+function calculateMaterialScore(capturedPieces) {
+  return capturedPieces.reduce((sum, piece) => sum + (pieceValues[piece.toLowerCase()] || 0), 0);
+}
+
+function sortCapturedPieces(pieces) {
+  return [...pieces].sort((a, b) => {
+    const indexA = pieceOrder.indexOf(a.toLowerCase());
+    const indexB = pieceOrder.indexOf(b.toLowerCase());
+    return indexA - indexB;
+  });
+}
+
+function updateCapturedPiecesDisplay() {
+  const playerCapturedEl = document.getElementById('playerCaptured');
+  const aiCapturedEl = document.getElementById('aiCaptured');
+  const playerScoreEl = document.getElementById('playerMaterialScore');
+  const aiScoreEl = document.getElementById('aiMaterialScore');
+  
+  if (!playerCapturedEl || !aiCapturedEl) return;
+  
+  const playerScore = calculateMaterialScore(capturedByPlayer);
+  const aiScore = calculateMaterialScore(capturedByAI);
+  const scoreDiff = playerScore - aiScore;
+  
+  // Sort and display captured pieces
+  const sortedPlayerCaptures = sortCapturedPieces(capturedByPlayer);
+  const sortedAICaptures = sortCapturedPieces(capturedByAI);
+  
+  // Player captured pieces (these are opponent's pieces, so show them as black if player is white)
+  playerCapturedEl.innerHTML = sortedPlayerCaptures.map(p => {
+    const isWhitePiece = p === p.toUpperCase();
+    const pieceClass = isWhitePiece ? 'captured-white' : 'captured-black';
+    return `<span class="captured-piece ${pieceClass}">${pieces[p]}</span>`;
+  }).join('');
+  
+  // AI captured pieces
+  aiCapturedEl.innerHTML = sortedAICaptures.map(p => {
+    const isWhitePiece = p === p.toUpperCase();
+    const pieceClass = isWhitePiece ? 'captured-white' : 'captured-black';
+    return `<span class="captured-piece ${pieceClass}">${pieces[p]}</span>`;
+  }).join('');
+  
+  // Update scores with advantage indicator
+  if (scoreDiff > 0) {
+    playerScoreEl.textContent = `+${scoreDiff}`;
+    playerScoreEl.className = 'material-score advantage';
+    aiScoreEl.textContent = '';
+    aiScoreEl.className = 'material-score';
+  } else if (scoreDiff < 0) {
+    aiScoreEl.textContent = `+${Math.abs(scoreDiff)}`;
+    aiScoreEl.className = 'material-score advantage';
+    playerScoreEl.textContent = '';
+    playerScoreEl.className = 'material-score';
+  } else {
+    playerScoreEl.textContent = '';
+    playerScoreEl.className = 'material-score';
+    aiScoreEl.textContent = '';
+    aiScoreEl.className = 'material-score';
+  }
+}
+
+function addCapturedPiece(piece, capturedByPlayerSide) {
+  if (capturedByPlayerSide) {
+    capturedByPlayer.push(piece);
+  } else {
+    capturedByAI.push(piece);
+  }
+  updateCapturedPiecesDisplay();
+}

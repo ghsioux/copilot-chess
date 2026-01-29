@@ -181,7 +181,8 @@ app.post('/api/game/:gameId/ai-first-move', async (req, res) => {
         san: aiResult.san,
         from: aiResult.from,
         to: aiResult.to,
-        color: aiResult.color
+        color: aiResult.color,
+        captured: aiResult.captured || null
       },
       aiThinkTime,
       model
@@ -240,7 +241,8 @@ app.post('/api/game/:gameId/move', async (req, res) => {
       san: result.san,
       from: result.from,
       to: result.to,
-      color: result.color
+      color: result.color,
+      captured: result.captured || null
     };
 
     const fenAfterPlayer = chess.fen();
@@ -253,7 +255,9 @@ app.post('/api/game/:gameId/move', async (req, res) => {
         isGameOver: true,
         isCheckmate: chess.isCheckmate(),
         isDraw: chess.isDraw(),
-        playerMove
+        playerMove,
+        turn: chess.turn() === 'w' ? 'white' : 'black',
+        playerMadeLastMove: true
       });
     }
     
@@ -271,7 +275,8 @@ app.post('/api/game/:gameId/move', async (req, res) => {
       san: aiResult.san,
       from: aiResult.from,
       to: aiResult.to,
-      color: aiResult.color
+      color: aiResult.color,
+      captured: aiResult.captured || null
     };
     
     res.json({
