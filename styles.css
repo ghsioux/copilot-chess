@@ -1,0 +1,847 @@
+/* ==========================================================================
+   Copilot Chess - Playful/Toy-like Aesthetic
+   Design System & Styles
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Design Tokens (CSS Variables)
+   ========================================================================== */
+
+:root {
+    /* Color Palette - Candy/Toy colors */
+    --color-sun: #FFD93D;       /* Jaune soleil */
+    --color-candy: #FF6B9D;     /* Rose bonbon */
+    --color-sky: #6BCBFF;       /* Bleu ciel */
+    --color-mint: #7DFFCD;      /* Vert menthe */
+    --color-grape: #C895FF;     /* Violet doux */
+    --color-cream: #FFF9E6;     /* Fond crème */
+    --color-white: #FFFFFF;
+    --color-dark: #3D3D3D;
+    --color-shadow: rgba(0, 0, 0, 0.15);
+    
+    /* Typography */
+    --font-display: 'Fredoka One', cursive;
+    --font-body: 'Nunito', sans-serif;
+    
+    /* Border Radius */
+    --radius-bubble: 24px;
+    --radius-medium: 16px;
+    --radius-small: 12px;
+    --radius-round: 50%;
+    
+    /* Shadows - 3D Toy Effect */
+    --shadow-toy: 0 6px 0 var(--color-shadow), 0 12px 24px rgba(0, 0, 0, 0.1);
+    --shadow-toy-hover: 0 8px 0 var(--color-shadow), 0 16px 32px rgba(0, 0, 0, 0.12);
+    --shadow-toy-pressed: 0 2px 0 var(--color-shadow), 0 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+    
+    /* Spacing */
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    
+    /* Transitions */
+    --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+}
+
+/* ==========================================================================
+   2. Base Styles
+   ========================================================================== */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
+    font-weight: 600;
+    color: var(--color-dark);
+    background-color: var(--color-cream);
+    min-height: 100vh;
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+/* ==========================================================================
+   3. Background Pattern - Confetti/Dots
+   ========================================================================== */
+
+.pattern-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    background-image: 
+        radial-gradient(circle at 10% 20%, var(--color-sun) 2px, transparent 2px),
+        radial-gradient(circle at 90% 30%, var(--color-candy) 3px, transparent 3px),
+        radial-gradient(circle at 30% 80%, var(--color-sky) 2px, transparent 2px),
+        radial-gradient(circle at 70% 10%, var(--color-mint) 2px, transparent 2px),
+        radial-gradient(circle at 50% 50%, var(--color-grape) 1.5px, transparent 1.5px),
+        radial-gradient(circle at 20% 60%, var(--color-sun) 1.5px, transparent 1.5px),
+        radial-gradient(circle at 80% 70%, var(--color-candy) 2px, transparent 2px),
+        radial-gradient(circle at 40% 30%, var(--color-sky) 1.5px, transparent 1.5px),
+        radial-gradient(circle at 60% 90%, var(--color-mint) 2px, transparent 2px),
+        radial-gradient(circle at 15% 45%, var(--color-grape) 1px, transparent 1px),
+        radial-gradient(circle at 85% 55%, var(--color-sun) 1px, transparent 1px),
+        radial-gradient(circle at 45% 15%, var(--color-candy) 1.5px, transparent 1.5px),
+        radial-gradient(circle at 75% 85%, var(--color-sky) 1px, transparent 1px);
+    background-size: 
+        200px 200px, 250px 250px, 180px 180px, 220px 220px, 
+        160px 160px, 190px 190px, 230px 230px, 170px 170px,
+        210px 210px, 240px 240px, 150px 150px, 200px 200px, 180px 180px;
+    opacity: 0.6;
+}
+
+/* ==========================================================================
+   4. App Container & Layout
+   ========================================================================== */
+
+.app-container {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    gap: var(--space-xl);
+    flex: 1;
+    align-items: start;
+}
+
+/* ==========================================================================
+   5. Header - Playful Typography
+   ========================================================================== */
+
+.game-header {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    margin: 0 0 var(--space-sm);
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.letter {
+    display: inline-block;
+    transition: transform var(--duration-normal) var(--transition-bounce);
+}
+
+/* Slightly offset letters for playful effect */
+.letter-1 { color: var(--color-sun); transform: rotate(-3deg); }
+.letter-2 { color: var(--color-candy); transform: translateY(2px); }
+.letter-3 { color: var(--color-sky); transform: rotate(2deg); }
+.letter-4 { color: var(--color-mint); transform: translateY(-2px); }
+.letter-5 { color: var(--color-grape); transform: rotate(-2deg); }
+.letter-6 { color: var(--color-sun); transform: translateY(3px); }
+.letter-7 { color: var(--color-candy); transform: rotate(3deg); }
+.letter-8 { color: var(--color-sky); transform: rotate(-2deg); }
+.letter-9 { color: var(--color-mint); transform: translateY(2px); }
+.letter-10 { color: var(--color-grape); transform: rotate(2deg); }
+.letter-11 { color: var(--color-sun); transform: translateY(-2px); }
+.letter-12 { color: var(--color-candy); transform: rotate(-3deg); }
+
+.letter:hover {
+    animation: wiggle 0.5s ease-in-out;
+}
+
+.space {
+    width: 1rem;
+}
+
+.emoji {
+    font-size: 0.8em;
+    margin-left: var(--space-sm);
+}
+
+.subtitle {
+    font-family: var(--font-body);
+    font-size: 1.2rem;
+    color: var(--color-dark);
+    opacity: 0.8;
+    margin: 0;
+}
+
+/* ==========================================================================
+   6. Toy Box Panels
+   ========================================================================== */
+
+.toy-box {
+    background: var(--color-white);
+    border-radius: var(--radius-bubble);
+    border: 4px solid var(--color-dark);
+    box-shadow: var(--shadow-toy);
+    overflow: hidden;
+    transition: transform var(--duration-normal) var(--transition-smooth),
+                box-shadow var(--duration-normal) var(--transition-smooth);
+}
+
+.toy-box:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-toy-hover);
+}
+
+.panel-header {
+    background: linear-gradient(135deg, var(--color-sun) 0%, var(--color-candy) 100%);
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 3px solid var(--color-dark);
+}
+
+.panel-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    margin: 0;
+    color: var(--color-dark);
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.panel-content {
+    padding: var(--space-lg);
+}
+
+/* ==========================================================================
+   7. Badges - Colorful Status Pills
+   ========================================================================== */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: 50px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 3px solid var(--color-dark);
+    box-shadow: 0 3px 0 var(--color-shadow);
+    transition: transform var(--duration-fast) var(--transition-bounce);
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+.badge-sun {
+    background: var(--color-sun);
+    color: var(--color-dark);
+}
+
+.badge-candy {
+    background: var(--color-candy);
+    color: var(--color-white);
+}
+
+.badge-sky {
+    background: var(--color-sky);
+    color: var(--color-dark);
+}
+
+.badge-mint {
+    background: var(--color-mint);
+    color: var(--color-dark);
+}
+
+.badge-grape {
+    background: var(--color-grape);
+    color: var(--color-dark);
+}
+
+.badge-emoji {
+    font-size: 1.1em;
+}
+
+/* Turn Indicator */
+.turn-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-lg);
+}
+
+#turn-badge {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   8. Score Display (Arcade Style)
+   ========================================================================== */
+
+.score-display {
+    background: linear-gradient(180deg, #2D2D2D 0%, #1A1A1A 100%);
+    border-radius: var(--radius-medium);
+    padding: var(--space-md);
+    text-align: center;
+    margin-bottom: var(--space-lg);
+    border: 3px solid var(--color-dark);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.score-label {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: var(--color-sun);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--space-xs);
+}
+
+.score-value {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--color-mint);
+    text-shadow: 0 0 10px var(--color-mint), 0 0 20px var(--color-mint);
+}
+
+/* AI Badge */
+.ai-badge {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-lg);
+}
+
+/* ==========================================================================
+   9. Buttons - 3D Press Effect
+   ========================================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-md) var(--space-lg);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    border: 3px solid var(--color-dark);
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    position: relative;
+    top: 0;
+    box-shadow: 0 6px 0 var(--color-dark);
+    transition: all var(--duration-fast) var(--transition-smooth);
+    text-decoration: none;
+    user-select: none;
+    width: 100%;
+}
+
+.btn:hover {
+    top: -2px;
+    box-shadow: 0 8px 0 var(--color-dark);
+}
+
+.btn:active {
+    top: 4px;
+    box-shadow: 0 2px 0 var(--color-dark);
+}
+
+.btn:focus {
+    outline: 3px solid var(--color-grape);
+    outline-offset: 2px;
+}
+
+.btn-icon {
+    font-size: 1.2em;
+}
+
+/* Button Colors */
+.btn-sun {
+    background: var(--color-sun);
+    color: var(--color-dark);
+}
+
+.btn-candy {
+    background: var(--color-candy);
+    color: var(--color-white);
+}
+
+.btn-sky {
+    background: var(--color-sky);
+    color: var(--color-dark);
+}
+
+.btn-mint {
+    background: var(--color-mint);
+    color: var(--color-dark);
+}
+
+.btn-grape {
+    background: var(--color-grape);
+    color: var(--color-dark);
+}
+
+/* Controls Container */
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+/* ==========================================================================
+   10. Chess Board Section
+   ========================================================================== */
+
+.board-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.board-wrapper {
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-mint) 100%);
+}
+
+#chessboard {
+    width: 100%;
+    max-width: 500px;
+}
+
+/* AI Thinking Indicator */
+.ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--color-grape);
+    border-radius: 50px;
+    border: 3px solid var(--color-dark);
+    box-shadow: 0 4px 0 var(--color-shadow);
+}
+
+.ai-thinking.hidden {
+    display: none;
+}
+
+.thinking-text {
+    font-family: var(--font-body);
+    font-weight: 700;
+    color: var(--color-dark);
+}
+
+.thinking-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.dot {
+    font-size: 1.2rem;
+    color: var(--color-dark);
+    animation: bounce-dot 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* ==========================================================================
+   11. Move History - Post-it Style
+   ========================================================================== */
+
+.move-history {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: var(--space-xs);
+}
+
+.move-history::-webkit-scrollbar {
+    width: 8px;
+}
+
+.move-history::-webkit-scrollbar-track {
+    background: var(--color-cream);
+    border-radius: 4px;
+}
+
+.move-history::-webkit-scrollbar-thumb {
+    background: var(--color-candy);
+    border-radius: 4px;
+}
+
+.empty-history {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    color: var(--color-dark);
+    opacity: 0.6;
+    text-align: center;
+}
+
+.empty-emoji {
+    font-size: 2rem;
+}
+
+.move-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-sm);
+    border-radius: var(--radius-small);
+    border: 2px solid var(--color-dark);
+    box-shadow: 2px 2px 0 var(--color-shadow);
+    font-family: var(--font-body);
+    font-weight: 600;
+    animation: slide-in 0.3s var(--transition-bounce);
+}
+
+.move-card:nth-child(4n+1) { background: var(--color-sun); }
+.move-card:nth-child(4n+2) { background: var(--color-sky); }
+.move-card:nth-child(4n+3) { background: var(--color-mint); }
+.move-card:nth-child(4n+4) { background: var(--color-grape); }
+
+.move-number {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    background: var(--color-dark);
+    color: var(--color-white);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-round);
+}
+
+.move-text {
+    flex: 1;
+}
+
+.move-player {
+    font-size: 1.1em;
+}
+
+/* ==========================================================================
+   12. Game Status Messages
+   ========================================================================== */
+
+.game-status {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    background: var(--color-white);
+    border: 4px solid var(--color-dark);
+    border-radius: var(--radius-bubble);
+    padding: var(--space-xl) var(--space-2xl);
+    box-shadow: var(--shadow-toy), 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+    animation: pop-in 0.5s var(--transition-bounce);
+}
+
+.game-status.hidden {
+    display: none;
+}
+
+.status-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    text-align: center;
+}
+
+.status-emoji {
+    font-size: 4rem;
+    animation: wiggle 0.5s ease-in-out infinite;
+}
+
+.status-text {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--color-dark);
+}
+
+/* ==========================================================================
+   13. Footer
+   ========================================================================== */
+
+.game-footer {
+    text-align: center;
+    padding: var(--space-lg);
+    margin-top: var(--space-xl);
+    font-family: var(--font-body);
+    color: var(--color-dark);
+    opacity: 0.7;
+}
+
+/* ==========================================================================
+   14. Confetti Canvas
+   ========================================================================== */
+
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 200;
+}
+
+/* ==========================================================================
+   15. Animations
+   ========================================================================== */
+
+/* Bounce In Animation */
+@keyframes bounce-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(40px);
+    }
+    50% {
+        transform: scale(1.05) translateY(-10px);
+    }
+    70% {
+        transform: scale(0.95) translateY(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.bounce-in {
+    animation: bounce-in 0.6s var(--transition-bounce) forwards;
+    opacity: 0;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+
+/* Wiggle Animation */
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Bounce Dot Animation */
+@keyframes bounce-dot {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Slide In Animation */
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Pop In Animation */
+@keyframes pop-in {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    70% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Sad Wobble Animation */
+@keyframes sad-wobble {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+}
+
+/* ==========================================================================
+   16. Responsive Design
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+    .game-layout {
+        grid-template-columns: 250px 1fr 250px;
+        gap: var(--space-lg);
+    }
+}
+
+@media (max-width: 1024px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+    }
+    
+    .info-panel, .history-panel {
+        order: 2;
+    }
+    
+    .board-section {
+        order: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        padding: var(--space-md);
+    }
+    
+    .title {
+        font-size: 2rem;
+    }
+    
+    .toy-box {
+        border-radius: var(--radius-medium);
+    }
+    
+    .panel-header {
+        padding: var(--space-sm) var(--space-md);
+    }
+    
+    .panel-header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .panel-content {
+        padding: var(--space-md);
+    }
+    
+    #chessboard {
+        max-width: 100%;
+    }
+    
+    .btn {
+        padding: var(--space-sm) var(--space-md);
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 1.6rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .score-value {
+        font-size: 2rem;
+    }
+    
+    .badge {
+        font-size: 0.8rem;
+        padding: var(--space-xs) var(--space-sm);
+    }
+}
+
+/* ==========================================================================
+   17. Accessibility
+   ========================================================================== */
+
+/* Ensure touch targets are at least 44px */
+@media (pointer: coarse) {
+    .btn {
+        min-height: 48px;
+    }
+    
+    .badge {
+        min-height: 40px;
+    }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .bounce-in {
+        opacity: 1;
+    }
+}
+
+/* Focus visible styles for keyboard navigation */
+*:focus-visible {
+    outline: 3px solid var(--color-candy);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .toy-box {
+        border-width: 4px;
+    }
+    
+    .badge {
+        border-width: 3px;
+    }
+    
+    .btn {
+        border-width: 3px;
+    }
+}
+
+/* Dark mode adjustments - keep playful but easier on eyes */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-cream: #2D2D2D;
+        --color-dark: #F0F0F0;
+        --color-white: #3D3D3D;
+    }
+    
+    .pattern-overlay {
+        opacity: 0.3;
+    }
+}

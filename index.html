@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Copilot Chess - Jouez contre l'IA!</title>
+    
+    <!-- Google Fonts: Fredoka One (Display) + Nunito (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chess.js and Chessboard.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Confetti/dots pattern overlay -->
+    <div class="pattern-overlay"></div>
+    
+    <div class="app-container">
+        <!-- Header with playful typography -->
+        <header class="game-header bounce-in">
+            <h1 class="title">
+                <span class="letter letter-1">C</span><span class="letter letter-2">o</span><span class="letter letter-3">p</span><span class="letter letter-4">i</span><span class="letter letter-5">l</span><span class="letter letter-6">o</span><span class="letter letter-7">t</span>
+                <span class="space"></span>
+                <span class="letter letter-8">C</span><span class="letter letter-9">h</span><span class="letter letter-10">e</span><span class="letter letter-11">s</span><span class="letter letter-12">s</span>
+                <span class="emoji">♟️</span>
+            </h1>
+            <p class="subtitle">Jouez contre l'IA - Amusez-vous!</p>
+        </header>
+
+        <main class="game-layout">
+            <!-- Game Info Panel (Toy Box Style) -->
+            <aside class="info-panel toy-box bounce-in delay-1">
+                <div class="panel-header">
+                    <h2>🎲 Infos Partie</h2>
+                </div>
+                
+                <div class="panel-content">
+                    <!-- Turn Indicator Badge -->
+                    <div class="turn-indicator">
+                        <div id="turn-badge" class="badge badge-sun">
+                            <span class="badge-emoji">🎯</span>
+                            <span id="turn-text">Votre tour!</span>
+                        </div>
+                    </div>
+
+                    <!-- Move Counter (Arcade Style) -->
+                    <div class="score-display">
+                        <div class="score-label">Coups joués</div>
+                        <div class="score-value" id="move-count">0</div>
+                    </div>
+
+                    <!-- AI Model Badge -->
+                    <div class="ai-badge">
+                        <span class="badge badge-grape">
+                            <span class="badge-emoji">🤖</span>
+                            <span>IA Niveau: Débutant</span>
+                        </span>
+                    </div>
+
+                    <!-- Game Controls -->
+                    <div class="controls">
+                        <button class="btn btn-candy" id="new-game-btn">
+                            <span class="btn-icon">🆕</span>
+                            <span>Nouvelle Partie</span>
+                        </button>
+                        <button class="btn btn-sky" id="undo-btn">
+                            <span class="btn-icon">↩️</span>
+                            <span>Annuler</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Chess Board Container -->
+            <section class="board-section bounce-in delay-2">
+                <div class="board-wrapper toy-box">
+                    <div id="chessboard"></div>
+                </div>
+                
+                <!-- AI Thinking Indicator -->
+                <div id="ai-thinking" class="ai-thinking hidden">
+                    <span class="thinking-text">🤔 L'IA réfléchit</span>
+                    <span class="thinking-dots">
+                        <span class="dot">●</span>
+                        <span class="dot">●</span>
+                        <span class="dot">●</span>
+                    </span>
+                </div>
+            </section>
+
+            <!-- Move History (Post-it Style) -->
+            <aside class="history-panel toy-box bounce-in delay-3">
+                <div class="panel-header">
+                    <h2>📜 Historique</h2>
+                </div>
+                
+                <div class="panel-content">
+                    <div id="move-history" class="move-history">
+                        <div class="empty-history">
+                            <span class="empty-emoji">🎬</span>
+                            <span>Faites le premier coup!</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Game Status Messages -->
+        <div id="game-status" class="game-status hidden">
+            <div class="status-content">
+                <span id="status-emoji" class="status-emoji">🎉</span>
+                <span id="status-text" class="status-text">Échec et mat!</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="game-footer bounce-in delay-4">
+            <p>Fait avec ❤️ par GitHub Copilot</p>
+        </footer>
+    </div>
+
+    <!-- Confetti Canvas for Victory -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="app.js"></script>
+</body>
+</html>
