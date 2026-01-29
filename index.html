@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COPILOT CHESS // SYSTEM ONLINE</title>
+  
+  <!-- Google Fonts: Orbitron (display) + Share Tech Mono (body/terminal) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- CRT Scanlines Overlay -->
+  <div class="crt-overlay" aria-hidden="true"></div>
+  
+  <!-- Grid Perspective Background -->
+  <div class="grid-background" aria-hidden="true">
+    <div class="grid-horizon"></div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    
+    <!-- Header / System Status -->
+    <header class="system-header">
+      <div class="header-left">
+        <span class="led-indicator led-active"></span>
+        <h1 class="system-title glitch-text" data-text="COPILOT CHESS">COPILOT CHESS</h1>
+      </div>
+      <div class="header-right">
+        <span class="status-badge">[STATUS] ONLINE</span>
+        <span class="led-indicator led-pulse"></span>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="game-area">
+      
+      <!-- Left Panel: Game Info -->
+      <aside class="panel panel-left hud-panel">
+        <div class="panel-header">
+          <span class="panel-title">// GAME DATA</span>
+        </div>
+        <div class="panel-content">
+          <div class="stat-row">
+            <span class="stat-label">MOVES:</span>
+            <span class="stat-value counter" data-value="0">000</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">TIME:</span>
+            <span class="stat-value timer">00:00:00</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">MODE:</span>
+            <span class="stat-value">VS AI</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">DIFFICULTY:</span>
+            <span class="stat-value difficulty-level">NORMAL</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center: Chessboard Container -->
+      <section class="board-container">
+        <div class="board-frame">
+          <!-- Placeholder for the actual chessboard - remains unchanged per requirements -->
+          <div id="chessboard" class="chessboard-placeholder">
+            <!-- Chess pieces and board will be rendered here -->
+            <!-- The actual chessboard implementation remains UNCHANGED -->
+            <div class="board-demo">
+              <span class="board-message">♚ CHESSBOARD ♛</span>
+              <span class="board-sub">[BOARD AREA - UNCHANGED]</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Player Labels -->
+        <div class="player-labels">
+          <div class="player-label player-white">
+            <span class="player-icon">◇</span>
+            <span class="player-name">PLAYER</span>
+          </div>
+          <div class="player-label player-black">
+            <span class="player-icon">◆</span>
+            <span class="player-name">AI OPPONENT</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Move History / Terminal -->
+      <aside class="panel panel-right terminal-panel">
+        <div class="panel-header">
+          <span class="panel-title">// MOVE LOG</span>
+          <span class="terminal-cursor">_</span>
+        </div>
+        <div class="panel-content terminal-output" id="move-history">
+          <div class="terminal-line">
+            <span class="terminal-prompt">&gt;</span>
+            <span class="terminal-timestamp">[00:00:00]</span>
+            <span class="terminal-text typing-effect">SYSTEM INITIALIZED...</span>
+          </div>
+          <div class="terminal-line">
+            <span class="terminal-prompt">&gt;</span>
+            <span class="terminal-timestamp">[00:00:01]</span>
+            <span class="terminal-text typing-effect">AWAITING INPUT...</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- AI Thinking Indicator -->
+    <div class="ai-thinking" id="ai-thinking" hidden>
+      <span class="thinking-label">[AI] CALCULATING...</span>
+      <div class="scanline-loader">
+        <div class="scanline-bar"></div>
+      </div>
+      <div class="sound-wave">
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+      </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <footer class="controls-bar">
+      <div class="control-group">
+        <button class="neon-button neon-cyan" type="button">
+          <span class="btn-text">NEW GAME</span>
+        </button>
+        <button class="neon-button neon-magenta" type="button">
+          <span class="btn-text">UNDO MOVE</span>
+        </button>
+        <button class="neon-button neon-violet" type="button">
+          <span class="btn-text">HINT</span>
+        </button>
+      </div>
+      <div class="control-group">
+        <button class="neon-button neon-laser" type="button" id="demo-thinking">
+          <span class="btn-text">DEMO: AI THINKING</span>
+        </button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
