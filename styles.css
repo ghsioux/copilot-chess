@@ -220,10 +220,14 @@ h2 {
     opacity: 1;
 }
 
-/* Breathing animation on focus */
+/* Focus state without conflicting transform */
 .btn-leaf:focus {
     outline: 3px solid var(--color-gold);
     outline-offset: 2px;
+}
+
+/* Breathing animation only when focused but not hovered */
+.btn-leaf:focus:not(:hover) {
     animation: breathe 2s ease-in-out infinite;
 }
 
@@ -304,7 +308,7 @@ h2 {
     transform: translateY(-2px);
 }
 
-/* Wavy edge effect using clip-path */
+/* Wavy edge effect - removed undefined clip-path reference */
 .panel-inner::before {
     content: '';
     position: absolute;
@@ -313,8 +317,7 @@ h2 {
     right: 10%;
     height: 16px;
     background: var(--color-leaf-light);
-    clip-path: url(#wavyEdge);
-    border-radius: 50%;
+    border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
     opacity: 0.6;
 }
 
@@ -489,7 +492,7 @@ h2 {
     padding-right: var(--space-sm);
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Webkit browsers */
 .move-list::-webkit-scrollbar {
     width: 8px;
 }
@@ -506,6 +509,12 @@ h2 {
 
 .move-list::-webkit-scrollbar-thumb:hover {
     background: var(--color-moss);
+}
+
+/* Custom scrollbar - Firefox */
+.move-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-leaf) var(--color-earth-light);
 }
 
 .move-item {
@@ -740,9 +749,9 @@ h2 {
     *,
     *::before,
     *::after {
-        animation-duration: 0.01ms !important;
+        animation-duration: 1ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        transition-duration: 1ms !important;
     }
 }
 
@@ -762,12 +771,12 @@ h2 {
 /* Ensure sufficient contrast for text */
 .move-black {
     /* WCAG AA compliant contrast ratio */
-    color: #f5f2eb;
+    color: var(--color-cream);
 }
 
-/* Focus indicator for interactive elements */
+/* Focus indicator for interactive elements - consistent offset */
 button:focus-visible,
 a:focus-visible {
     outline: 3px solid var(--color-gold);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }

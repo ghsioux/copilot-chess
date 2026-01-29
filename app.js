@@ -3,6 +3,13 @@
  * JavaScript for UI interactions and animations
  */
 
+// Cache DOM elements for performance
+let aiThinkingElement = null;
+let statusObserver = null;
+
+// Check for reduced motion preference
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
 });
@@ -11,9 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
  * Initialize the application
  */
 function initializeApp() {
+    // Cache frequently used elements
+    aiThinkingElement = document.getElementById('aiThinking');
+    
     setupAIThinkingDemo();
     setupButtonEffects();
     setupAccessibility();
+    injectAnimationStyles();
 }
 
 /**
@@ -21,8 +32,6 @@ function initializeApp() {
  * In production, this would be triggered by actual AI computation
  */
 function setupAIThinkingDemo() {
-    const aiThinking = document.getElementById('aiThinking');
-    
     // Demo: Show thinking indicator after 3 seconds, hide after 5
     setTimeout(() => {
         showAIThinking();
@@ -34,10 +43,9 @@ function setupAIThinkingDemo() {
  * Show the AI thinking indicator
  */
 function showAIThinking() {
-    const aiThinking = document.getElementById('aiThinking');
-    if (aiThinking) {
-        aiThinking.classList.add('active');
-        aiThinking.setAttribute('aria-hidden', 'false');
+    if (aiThinkingElement) {
+        aiThinkingElement.classList.add('active');
+        aiThinkingElement.setAttribute('aria-hidden', 'false');
     }
 }
 
@@ -45,10 +53,9 @@ function showAIThinking() {
  * Hide the AI thinking indicator
  */
 function hideAIThinking() {
-    const aiThinking = document.getElementById('aiThinking');
-    if (aiThinking) {
-        aiThinking.classList.remove('active');
-        aiThinking.setAttribute('aria-hidden', 'true');
+    if (aiThinkingElement) {
+        aiThinkingElement.classList.remove('active');
+        aiThinkingElement.setAttribute('aria-hidden', 'true');
     }
 }
 
@@ -67,10 +74,16 @@ function setupButtonEffects() {
 
 /**
  * Create floating leaf particles at the given position
+ * Respects prefers-reduced-motion preference
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  */
 function createLeafParticles(x, y) {
+    // Respect reduced motion preference
+    if (prefersReducedMotion) {
+        return;
+    }
+    
     const leaves = ['🍂', '🍃', '🌿', '🌱'];
     const particleCount = 5;
     
@@ -104,21 +117,31 @@ function createLeafParticles(x, y) {
     }
 }
 
-// Add CSS for leaf particle animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes leafFloat {
-        0% {
-            opacity: 1;
-            transform: translate(0, 0) rotate(0deg);
-        }
-        100% {
-            opacity: 0;
-            transform: translate(var(--end-x), var(--end-y)) rotate(360deg);
-        }
+/**
+ * Inject animation styles only once
+ */
+function injectAnimationStyles() {
+    // Check if styles already exist to prevent duplicates
+    if (document.getElementById('leaf-particle-styles')) {
+        return;
     }
-`;
-document.head.appendChild(style);
+    
+    const style = document.createElement('style');
+    style.id = 'leaf-particle-styles';
+    style.textContent = `
+        @keyframes leafFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--end-x), var(--end-y)) rotate(360deg);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 /**
  * Setup accessibility features
@@ -127,7 +150,7 @@ function setupAccessibility() {
     // Announce status changes to screen readers
     const statusText = document.querySelector('.status-text');
     if (statusText) {
-        const observer = new MutationObserver((mutations) => {
+        statusObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'characterData' || mutation.type === 'childList') {
                     announceToScreenReader(statusText.textContent);
@@ -135,11 +158,22 @@ function setupAccessibility() {
             });
         });
         
-        observer.observe(statusText, { 
+        statusObserver.observe(statusText, { 
             characterData: true, 
             childList: true, 
             subtree: true 
         });
+    }
+}
+
+/**
+ * Cleanup function for observers and event listeners
+ * Call this when unmounting the component or navigating away
+ */
+function cleanup() {
+    if (statusObserver) {
+        statusObserver.disconnect();
+        statusObserver = null;
     }
 }
 
@@ -155,7 +189,8 @@ function announceToScreenReader(message) {
     announcement.textContent = message;
     document.body.appendChild(announcement);
     
-    setTimeout(() => announcement.remove(), 1000);
+    // Allow enough time for screen readers to announce the message
+    setTimeout(() => announcement.remove(), 3000);
 }
 
 // Export functions for external use
@@ -164,6 +199,7 @@ if (typeof module !== 'undefined' && module.exports) {
         showAIThinking,
         hideAIThinking,
         createLeafParticles,
-        announceToScreenReader
+        announceToScreenReader,
+        cleanup
     };
 }
