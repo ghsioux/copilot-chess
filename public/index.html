@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>♟️ Copilot Chess - Battle the AI! 🤖</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>♟️ COPILOT CHESS ♟️</h1>
+      <p class="subtitle">🤖 Battle Against the AI Overlord 🤖</p>
+    </header>
+
+    <div class="game-setup" id="gameSetup">
+      <div class="setup-card">
+        <h2>🎮 Choose Your Destiny</h2>
+        <p class="setup-subtitle">Select difficulty level and prepare for battle!</p>
+        
+        <div class="difficulty-selector">
+          <button class="difficulty-btn" data-difficulty="easy">
+            <div class="difficulty-icon">😊</div>
+            <div class="difficulty-name">EASY</div>
+            <div class="difficulty-desc">Copilot is having a coffee break</div>
+          </button>
+          
+          <button class="difficulty-btn selected" data-difficulty="intermediate">
+            <div class="difficulty-icon">🤔</div>
+            <div class="difficulty-name">INTERMEDIATE</div>
+            <div class="difficulty-desc">Copilot is warming up</div>
+          </button>
+          
+          <button class="difficulty-btn" data-difficulty="difficult">
+            <div class="difficulty-icon">😈</div>
+            <div class="difficulty-name">DIFFICULT</div>
+            <div class="difficulty-desc">Copilot means business</div>
+          </button>
+        </div>
+
+        <button id="startGameBtn" class="start-btn">
+          <span>⚔️ START BATTLE ⚔️</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="game-container" id="gameContainer" style="display: none;">
+      <div class="game-info">
+        <div class="info-panel">
+          <div class="status-box">
+            <h3>📊 Game Status</h3>
+            <div id="gameStatus">Ready to play!</div>
+            <div id="turnIndicator" class="turn-indicator">Your turn (White)</div>
+          </div>
+          
+          <div class="difficulty-display">
+            <strong>Difficulty:</strong> <span id="currentDifficulty">Intermediate</span>
+          </div>
+
+          <div class="move-history">
+            <h3>📜 Move History</h3>
+            <div id="moveHistory" class="moves-list"></div>
+          </div>
+
+          <button id="newGameBtn" class="action-btn">
+            🔄 New Game
+          </button>
+          <button id="resignBtn" class="action-btn resign-btn">
+            🏳️ Resign
+          </button>
+        </div>
+      </div>
+
+      <div class="chess-board-container">
+        <div id="chessBoard" class="chess-board"></div>
+        <div class="board-coordinates">
+          <div class="coordinates-files">
+            <span>a</span><span>b</span><span>c</span><span>d</span>
+            <span>e</span><span>f</span><span>g</span><span>h</span>
+          </div>
+          <div class="coordinates-ranks">
+            <span>8</span><span>7</span><span>6</span><span>5</span>
+            <span>4</span><span>3</span><span>2</span><span>1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>💻 Powered by Copilot SDK | Made with ❤️ and ☕</p>
+    </footer>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

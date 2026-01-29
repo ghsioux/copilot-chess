@@ -1,0 +1,19 @@
+{
+  "name": "copilot-chess",
+  "version": "1.0.0",
+  "description": "A simple chess game powered by Copilot SDK with three difficulty levels",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "chess.js": "^1.4.0",
+    "express": "^5.2.1"
+  }
+}
