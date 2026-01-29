@@ -24,6 +24,7 @@ let turnStartTime = null;
 // Board orientation
 let isBoardFlipped = false;
 let currentDisplayedFen = null; // Track the currently displayed position
+let currentModelName = null; // Store the current AI model name
 
 // DOM elements
 const gameSetup = document.getElementById('gameSetup');
@@ -108,7 +109,9 @@ async function startNewGame() {
 
     gameSetup.style.display = 'none';
     gameContainer.style.display = 'flex';
-    currentDifficulty.textContent = data.model || selectedModel || '-';
+    currentModelName = data.model || selectedModel || 'IA';
+    currentDifficulty.textContent = currentModelName;
+    updateBoardLabels();
     gameStatus.textContent = '🎮 Game started! Make your move!';
     turnIndicator.textContent = 'Your turn (White)';
     moveHistory.innerHTML = '';
@@ -175,6 +178,23 @@ function highlightLastMove() {
   }
 }
 
+// Update board labels with model name
+function updateBoardLabels() {
+  const topLabel = document.querySelector('.board-label-top');
+  const bottomLabel = document.querySelector('.board-label-bottom');
+  const modelDisplayName = currentModelName || 'IA';
+  
+  if (topLabel && bottomLabel) {
+    if (isBoardFlipped) {
+      topLabel.textContent = 'Vous (Blancs)';
+      bottomLabel.textContent = `🤖 ${modelDisplayName} (Noirs)`;
+    } else {
+      topLabel.textContent = `🤖 ${modelDisplayName} (Noirs)`;
+      bottomLabel.textContent = 'Vous (Blancs)';
+    }
+  }
+}
+
 // Flip the board orientation
 function flipBoard() {
   isBoardFlipped = !isBoardFlipped;
@@ -198,12 +218,7 @@ function flipBoard() {
   }
   
   // Update labels
-  const topLabel = document.querySelector('.board-label-top');
-  const bottomLabel = document.querySelector('.board-label-bottom');
-  if (topLabel && bottomLabel) {
-    topLabel.textContent = isBoardFlipped ? 'Vous (Blancs)' : 'IA (Noirs)';
-    bottomLabel.textContent = isBoardFlipped ? 'IA (Noirs)' : 'Vous (Blancs)';
-  }
+  updateBoardLabels();
   
   // Update flip button icon
   const flipBtn = document.getElementById('flipBoardBtn');
