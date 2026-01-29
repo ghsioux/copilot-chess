@@ -1,0 +1,2 @@
+- mobile responsive
+- indicateur quand roi échec

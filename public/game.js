@@ -117,7 +117,6 @@ async function startNewGame() {
     gameContainer.style.display = 'flex';
     currentModelName = data.model || selectedModel || 'IA';
     currentDifficulty.textContent = currentModelName;
-    updateBoardLabels();
     
     const colorName = playerColor === 'white' ? 'White' : 'Black';
     gameStatus.textContent = '';
@@ -227,28 +226,6 @@ function highlightLastMove() {
   }
 }
 
-// Update board labels with model name
-function updateBoardLabels() {
-  const topLabel = document.querySelector('.board-label-top');
-  const bottomLabel = document.querySelector('.board-label-bottom');
-  const modelDisplayName = currentModelName || 'IA';
-  
-  const playerColorName = playerColor === 'white' ? 'Blancs' : 'Noirs';
-  const aiColorName = playerColor === 'white' ? 'Noirs' : 'Blancs';
-  
-  if (topLabel && bottomLabel) {
-    if (isBoardFlipped) {
-      // When flipped, player's pieces are at top
-      topLabel.textContent = `Vous (${playerColorName})`;
-      bottomLabel.textContent = `🤖 ${modelDisplayName} (${aiColorName})`;
-    } else {
-      // Normal view, player's pieces at bottom
-      topLabel.textContent = `🤖 ${modelDisplayName} (${aiColorName})`;
-      bottomLabel.textContent = `Vous (${playerColorName})`;
-    }
-  }
-}
-
 // Flip the board orientation
 function flipBoard() {
   isBoardFlipped = !isBoardFlipped;
@@ -271,9 +248,6 @@ function flipBoard() {
     }
   }
   
-  // Update labels
-  updateBoardLabels();
-  
   // Update flip button icon
   const flipBtn = document.getElementById('flipBoardBtn');
   if (flipBtn) {
@@ -283,11 +257,6 @@ function flipBoard() {
 
 // Read the current board state from DOM and convert to FEN (position part only)
 function getBoardFenFromDOM() {
-  const pieceToFen = {
-    '♔': 'K', '♕': 'Q', '♖': 'R', '♗': 'B', '♘': 'N', '♙': 'P',
-    '♚': 'k', '♛': 'q', '♜': 'r', '♝': 'b', '♞': 'n', '♟': 'p'
-  };
-  
   const rows = [];
   for (let rank = 8; rank >= 1; rank--) {
     let row = '';
@@ -295,14 +264,15 @@ function getBoardFenFromDOM() {
     
     for (const file of 'abcdefgh') {
       const square = document.querySelector(`[data-square="${file}${rank}"]`);
-      const piece = square?.textContent?.trim();
+      // Use data-piece attribute instead of textContent to preserve piece color
+      const pieceCode = square?.dataset?.piece;
       
-      if (piece && pieceToFen[piece]) {
+      if (pieceCode) {
         if (emptyCount > 0) {
           row += emptyCount;
           emptyCount = 0;
         }
-        row += pieceToFen[piece];
+        row += pieceCode;
       } else {
         emptyCount++;
       }
@@ -416,6 +386,12 @@ function animateMove(from, to) {
     const toEl = document.querySelector(`[data-square="${to}"]`);
     if (!fromEl || !toEl || !fromEl.textContent.trim()) return resolve();
 
+    // Highlight starting square immediately at the beginning of animation
+    document.querySelectorAll('.last-move-from, .last-move-to').forEach(el => {
+      el.classList.remove('last-move-from', 'last-move-to');
+    });
+    fromEl.classList.add('last-move-from');
+
     const boardRect = chessBoard.getBoundingClientRect();
     const fromRect = fromEl.getBoundingClientRect();
     const toRect = toEl.getBoundingClientRect();
@@ -466,6 +442,8 @@ function animateMove(from, to) {
       // Place the piece on the destination square after animation
       toEl.textContent = pieceSymbol;
       if (pieceCode) toEl.dataset.piece = pieceCode;
+      // Highlight destination square at end of animation
+      toEl.classList.add('last-move-to');
       resolve();
     };
 
@@ -572,9 +550,11 @@ async function getCurrentFen() {
 // Update game status
 function updateStatus(data) {
   const colorName = playerColor === 'white' ? 'White' : 'Black';
-  // Player wins if it's the opponent's turn and checkmate (opponent can't move)
-  const playerWins = (playerColor === 'white' && data.turn === 'black') || 
-                     (playerColor === 'black' && data.turn === 'white');
+  // Player wins if it's the opponent's turn during checkmate (opponent is in checkmate, can't escape)
+  // data.turn indicates whose turn it is - if it's the opponent's turn and checkmate, they are the one mated
+  const opponentInCheckmate = (playerColor === 'white' && data.turn === 'black') || 
+                              (playerColor === 'black' && data.turn === 'white');
+  const playerWins = opponentInCheckmate;
   
   if (data.isCheckmate) {
     gameStatus.innerHTML = playerWins ? '🎉 Checkmate! You win! 🎉' : '😢 Checkmate! AI wins! 😢';
