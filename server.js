@@ -52,31 +52,32 @@ const resolveModel = (name) => {
 
 const getModelNames = () => availableModels.map(m => m.name);
 
-async function createCopilotSession(modelName = DEFAULT_MODEL) {
+async function createCopilotSession(modelName = DEFAULT_MODEL, aiColor = 'black') {
   await modelsReady;
   await copilotReady;
   if (copilotStartError) throw copilotStartError;
   
   const model = resolveModel(modelName);
-  console.log(`🎮 Creating session with model: ${model}`);
+  console.log(`🎮 Creating session with model: ${model}, AI plays ${aiColor}`);
   
   return copilotClient.createSession({
     model,
     systemMessage: {
-      content: `You are a chess engine playing as black. You receive the current FEN and the list of legal moves. Respond with exactly one legal move in SAN from the provided list. Do not explain. Output only the SAN.`
+      content: `You are a chess engine playing as ${aiColor}. You receive the current FEN and the list of legal moves. Respond with exactly one legal move in SAN from the provided list. Do not explain. Output only the SAN.`
     },
   });
 }
 
-async function getCopilotMove(session, chessInstance) {
+async function getCopilotMove(session, chessInstance, aiColor = 'black') {
   const legalMovesVerbose = chessInstance.moves({ verbose: true });
   if (!legalMovesVerbose.length) throw new Error('No legal moves');
 
   const sans = legalMovesVerbose.map(m => m.san);
   const ucis = legalMovesVerbose.map(m => `${m.from}${m.to}${m.promotion || ''}`);
 
+  const colorName = aiColor === 'white' ? 'White' : 'Black';
   const prompt = [
-    'You are Black to move.',
+    `You are ${colorName} to move.`,
     `FEN: ${chessInstance.fen()}`,
     `Legal moves (SAN): ${sans.join(', ')}`,
     `Legal moves (UCI): ${ucis.join(', ')}`,
@@ -121,20 +122,73 @@ app.post('/api/game/new', async (req, res) => {
     }
     const gameId = crypto.randomUUID();
     const chess = new Chess();
-    const session = await createCopilotSession(modelName);
     
-    games.set(gameId, { chess, session, model: modelName });
+    // Randomly assign player color
+    const playerColor = Math.random() < 0.5 ? 'white' : 'black';
+    const aiColor = playerColor === 'white' ? 'black' : 'white';
+    console.log(`🎲 Random color assignment: Player = ${playerColor}, AI = ${aiColor}`);
     
+    const session = await createCopilotSession(modelName, aiColor);
+    
+    games.set(gameId, { chess, session, model: modelName, playerColor, aiColor });
+    
+    // Return immediately - don't wait for AI first move
     res.json({
       gameId,
       fen: chess.fen(),
       model: modelName,
       isGameOver: false,
-      turn: 'white'
+      turn: chess.turn() === 'w' ? 'white' : 'black',
+      playerColor,
+      aiColor,
+      aiMovesFirst: playerColor === 'black'
     });
   } catch (error) {
     console.error('Error creating game session:', error);
     res.status(500).json({ error: 'Failed to start Copilot session' });
+  }
+});
+
+// Get AI's first move (when AI plays white)
+app.post('/api/game/:gameId/ai-first-move', async (req, res) => {
+  const { gameId } = req.params;
+  const game = games.get(gameId);
+  
+  if (!game) {
+    return res.status(404).json({ error: 'Game not found' });
+  }
+  
+  const { chess, session, model, aiColor } = game;
+  
+  // Only process if it's AI's turn (white = 'w')
+  if (chess.turn() !== 'w' || aiColor !== 'white') {
+    return res.status(400).json({ error: 'Not AI turn to move first' });
+  }
+  
+  try {
+    const aiStartTime = Date.now();
+    const aiMoveSan = await getCopilotMove(session, chess, aiColor);
+    const aiThinkTime = Date.now() - aiStartTime;
+    
+    const aiResult = chess.move(aiMoveSan);
+    if (!aiResult) {
+      throw new Error(`Copilot returned illegal move: ${aiMoveSan}`);
+    }
+    
+    res.json({
+      fen: chess.fen(),
+      aiMove: {
+        san: aiResult.san,
+        from: aiResult.from,
+        to: aiResult.to,
+        color: aiResult.color
+      },
+      aiThinkTime,
+      model
+    });
+  } catch (error) {
+    console.error('AI first move error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -172,7 +226,7 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   
-  const { chess, session, model } = game;
+  const { chess, session, model, aiColor } = game;
   
   try {
     // Make player move
@@ -205,7 +259,7 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     
     // Copilot makes a move (with timing)
     const aiStartTime = Date.now();
-    const aiMoveSan = await getCopilotMove(session, chess);
+    const aiMoveSan = await getCopilotMove(session, chess, aiColor);
     const aiThinkTime = Date.now() - aiStartTime;
     
     const aiResult = chess.move(aiMoveSan);

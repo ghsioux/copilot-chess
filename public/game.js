@@ -1,6 +1,6 @@
-// Chess piece Unicode symbols
+// Chess piece Unicode symbols (using filled symbols for all, styled by CSS)
 const pieces = {
-  K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙',
+  K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟',
   k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟'
 };
 
@@ -12,6 +12,7 @@ let selectedModel = null;
 let moveCount = 0;
 let isAnimating = false;
 let lastMove = null; // { from: 'e2', to: 'e4' }
+let playerColor = 'white'; // 'white' or 'black'
 
 // History navigation
 let positionHistory = []; // Array of { fen, lastMove } for each position
@@ -103,6 +104,11 @@ async function startNewGame() {
     gameId = data.gameId;
     moveCount = 0;
     lastMove = null;
+    playerColor = data.playerColor || 'white';
+    
+    // Flip board if player is black (so their pieces are at bottom)
+    isBoardFlipped = playerColor === 'black';
+    
     positionHistory = [{ fen: data.fen, lastMove: null }];
     historyIndex = -1;
     isViewingHistory = false;
@@ -112,12 +118,55 @@ async function startNewGame() {
     currentModelName = data.model || selectedModel || 'IA';
     currentDifficulty.textContent = currentModelName;
     updateBoardLabels();
-    gameStatus.textContent = '🎮 Game started! Make your move!';
-    turnIndicator.textContent = 'Your turn (White)';
+    
+    const colorName = playerColor === 'white' ? 'White' : 'Black';
+    gameStatus.textContent = `🎮 Game started! You play ${colorName}!`;
     moveHistory.innerHTML = '';
-    turnStartTime = Date.now();
 
+    // Render board immediately
     renderBoard(data.fen);
+    
+    // If AI moves first, fetch its move asynchronously
+    if (data.aiMovesFirst) {
+      turnIndicator.textContent = '🤔 Copilot is thinking...';
+      isAnimating = true;
+      
+      try {
+        const aiResponse = await fetch(`/api/game/${gameId}/ai-first-move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const aiData = await aiResponse.json();
+        
+        if (aiData.aiMove) {
+          // Animate AI's first move
+          await animateMove(aiData.aiMove.from, aiData.aiMove.to);
+          lastMove = { from: aiData.aiMove.from, to: aiData.aiMove.to };
+          moveCount = 1;
+          
+          // Update board with new position
+          renderBoard(aiData.fen);
+          
+          // Save to history
+          positionHistory.push({ fen: aiData.fen, lastMove: lastMove });
+          
+          // Add to move history
+          const aiTime = aiData.aiThinkTime ? formatMoveTime(aiData.aiThinkTime) : '';
+          const aiTimeStr = aiTime ? ` (${aiTime})` : '';
+          const moveEntry = document.createElement('div');
+          moveEntry.innerHTML = `1. ${aiData.aiMove.san}${aiTimeStr} - ...`;
+          moveHistory.appendChild(moveEntry);
+        }
+      } catch (error) {
+        console.error('Error getting AI first move:', error);
+        gameStatus.textContent = '❌ AI failed to move';
+      }
+      
+      isAnimating = false;
+    }
+    
+    turnIndicator.textContent = `Your turn (${colorName})`;
+    turnStartTime = Date.now();
   } catch (error) {
     console.error('Error starting game:', error);
     alert('Failed to start game. Please try again.');
@@ -184,13 +233,18 @@ function updateBoardLabels() {
   const bottomLabel = document.querySelector('.board-label-bottom');
   const modelDisplayName = currentModelName || 'IA';
   
+  const playerColorName = playerColor === 'white' ? 'Blancs' : 'Noirs';
+  const aiColorName = playerColor === 'white' ? 'Noirs' : 'Blancs';
+  
   if (topLabel && bottomLabel) {
     if (isBoardFlipped) {
-      topLabel.textContent = 'Vous (Blancs)';
-      bottomLabel.textContent = `🤖 ${modelDisplayName} (Noirs)`;
+      // When flipped, player's pieces are at top
+      topLabel.textContent = `Vous (${playerColorName})`;
+      bottomLabel.textContent = `🤖 ${modelDisplayName} (${aiColorName})`;
     } else {
-      topLabel.textContent = `🤖 ${modelDisplayName} (Noirs)`;
-      bottomLabel.textContent = 'Vous (Blancs)';
+      // Normal view, player's pieces at bottom
+      topLabel.textContent = `🤖 ${modelDisplayName} (${aiColorName})`;
+      bottomLabel.textContent = `Vous (${playerColorName})`;
     }
   }
 }
@@ -295,18 +349,28 @@ function createSquare(row, col, pieceCode) {
   return square;
 }
 
+// Check if a piece belongs to the player
+function isPlayerPiece(piece) {
+  if (!piece) return false;
+  if (playerColor === 'white') {
+    return piece === piece.toUpperCase(); // White pieces are uppercase
+  } else {
+    return piece === piece.toLowerCase(); // Black pieces are lowercase
+  }
+}
+
 // Handle square click
 async function handleSquareClick(square, piece) {
   if (isAnimating) return;
   if (selectedSquare) {
     if (legalMoves.includes(square)) {
       await makeMove(selectedSquare, square);
-    } else if (piece && piece === piece.toUpperCase()) {
+    } else if (isPlayerPiece(piece)) {
       selectSquare(square);
     } else {
       deselectSquare();
     }
-  } else if (piece && piece === piece.toUpperCase()) {
+  } else if (isPlayerPiece(piece)) {
     selectSquare(square);
   }
 }
@@ -375,6 +439,7 @@ function animateMove(from, to) {
     const ghost = document.createElement('div');
     ghost.className = 'piece-ghost';
     ghost.textContent = pieceSymbol;
+    if (pieceCode) ghost.dataset.piece = pieceCode;
     ghost.style.width = `${fromRect.width}px`;
     ghost.style.height = `${fromRect.height}px`;
     ghost.style.left = '0';
@@ -432,7 +497,7 @@ async function makeMove(from, to) {
   highlightLastMove();
 
   // 3. Then call the server (Copilot SDK)
-  turnIndicator.textContent = '🤔 AI is thinking...';
+  turnIndicator.textContent = '🤔 Copilot is thinking...';
   
   try {
     const response = await fetch(`/api/game/${gameId}/move`, {
@@ -446,7 +511,8 @@ async function makeMove(from, to) {
     if (data.error) {
       alert(data.error);
       renderBoard(data.fen || await getCurrentFen());
-      turnIndicator.textContent = 'Your turn (White)';
+      const colorName = playerColor === 'white' ? 'White' : 'Black';
+      turnIndicator.textContent = `Your turn (${colorName})`;
       isAnimating = false;
       return;
     }
@@ -490,7 +556,8 @@ async function makeMove(from, to) {
   } catch (error) {
     console.error('Error making move:', error);
     alert('Failed to make move. Please try again.');
-    turnIndicator.textContent = 'Your turn (White)';
+    const colorName = playerColor === 'white' ? 'White' : 'Black';
+    turnIndicator.textContent = `Your turn (${colorName})`;
   }
   
   isAnimating = false;
@@ -504,8 +571,13 @@ async function getCurrentFen() {
 
 // Update game status
 function updateStatus(data) {
+  const colorName = playerColor === 'white' ? 'White' : 'Black';
+  // Player wins if it's the opponent's turn and checkmate (opponent can't move)
+  const playerWins = (playerColor === 'white' && data.turn === 'black') || 
+                     (playerColor === 'black' && data.turn === 'white');
+  
   if (data.isCheckmate) {
-    gameStatus.innerHTML = data.turn === 'black' ? '🎉 Checkmate! You win! 🎉' : '😢 Checkmate! AI wins! 😢';
+    gameStatus.innerHTML = playerWins ? '🎉 Checkmate! You win! 🎉' : '😢 Checkmate! AI wins! 😢';
     turnIndicator.textContent = 'Game Over';
     disableBoard();
   } else if (data.isDraw) {
@@ -514,10 +586,10 @@ function updateStatus(data) {
     disableBoard();
   } else if (data.isCheck) {
     gameStatus.innerHTML = '⚠️ Check! ⚠️';
-    turnIndicator.textContent = 'Your turn (White)';
+    turnIndicator.textContent = `Your turn (${colorName})`;
   } else {
     gameStatus.innerHTML = '🎮 Game in progress';
-    turnIndicator.textContent = 'Your turn (White)';
+    turnIndicator.textContent = `Your turn (${colorName})`;
   }
 }
 

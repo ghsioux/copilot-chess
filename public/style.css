@@ -329,12 +329,35 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.8rem;
+  font-size: 5.3rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+}
+
+/* White pieces styling - filled with dark outline */
+.square[data-piece="K"],
+.square[data-piece="Q"],
+.square[data-piece="R"],
+.square[data-piece="B"],
+.square[data-piece="N"],
+.square[data-piece="P"] {
+  color: #fff;
+  -webkit-text-stroke: 1px #333;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Black pieces styling */
+.square[data-piece="k"],
+.square[data-piece="q"],
+.square[data-piece="r"],
+.square[data-piece="b"],
+.square[data-piece="n"],
+.square[data-piece="p"] {
+  color: #222;
+  -webkit-text-stroke: 0.5px #000;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Last move highlighting */
@@ -354,11 +377,34 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.8rem;
+  font-size: 5rem;
   font-weight: 600;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
   pointer-events: none;
   z-index: 100;
+}
+
+/* White piece ghost styling */
+.piece-ghost[data-piece="K"],
+.piece-ghost[data-piece="Q"],
+.piece-ghost[data-piece="R"],
+.piece-ghost[data-piece="B"],
+.piece-ghost[data-piece="N"],
+.piece-ghost[data-piece="P"] {
+  color: #fff;
+  -webkit-text-stroke: 1px #333;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Black piece ghost styling */
+.piece-ghost[data-piece="k"],
+.piece-ghost[data-piece="q"],
+.piece-ghost[data-piece="r"],
+.piece-ghost[data-piece="b"],
+.piece-ghost[data-piece="n"],
+.piece-ghost[data-piece="p"] {
+  color: #222;
+  -webkit-text-stroke: 0.5px #000;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Board labels */
