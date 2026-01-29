@@ -10,9 +10,11 @@
   // Configuration
   // ==========================================================================
   const CONFIG = {
-    typingSpeed: 30, // ms per character
-    terminalMaxLines: 50,
-    counterAnimationDuration: 1000,
+    typingSpeed: 30,           // Milliseconds per character for typing effect
+    terminalMaxLines: 50,      // Maximum lines to keep in terminal history
+    counterAnimationDuration: 1000, // Animation duration for counter updates (ms)
+    aiHintDelay: 2000,         // Delay for hint processing simulation (ms)
+    aiDemoDelay: 3000,         // Delay for AI thinking demo (ms)
   };
 
   // ==========================================================================
@@ -24,9 +26,14 @@
    * @param {HTMLElement} element - The element to apply typing effect to
    * @param {string} text - The text to type
    * @param {number} speed - Typing speed in ms per character
-   * @returns {Promise} Resolves when typing is complete
+   * @returns {Promise<void>} Resolves when typing is complete
    */
   function typeText(element, text, speed = CONFIG.typingSpeed) {
+    // Clear any existing typing animation
+    if (element._typingTimeout) {
+      clearTimeout(element._typingTimeout);
+    }
+    
     return new Promise((resolve) => {
       element.textContent = '';
       let index = 0;
@@ -35,8 +42,9 @@
         if (index < text.length) {
           element.textContent += text.charAt(index);
           index++;
-          setTimeout(type, speed);
+          element._typingTimeout = setTimeout(type, speed);
         } else {
+          element._typingTimeout = null;
           resolve();
         }
       }
@@ -274,9 +282,11 @@
 
   function handleUndoMove() {
     if (moveCount > 0) {
-      moveCount--;
       const counterElement = document.querySelector('.counter');
       if (counterElement) {
+        // Ensure dataset is synced before animation
+        counterElement.dataset.value = String(moveCount);
+        moveCount--;
         animateCounter(counterElement, moveCount);
       }
       addTerminalLine('MOVE REVERTED', 'info');
@@ -293,7 +303,7 @@
     setTimeout(() => {
       hideAIThinking();
       addTerminalLine('HINT: CONSIDER CENTRAL CONTROL', 'success');
-    }, 2000);
+    }, CONFIG.aiHintDelay);
   }
 
   function handleDemoThinking() {
@@ -302,7 +312,7 @@
       hideAIThinking();
       incrementMoveCounter();
       addTerminalLine('DEMO: AI MADE A MOVE', 'move');
-    }, 3000);
+    }, CONFIG.aiDemoDelay);
   }
 
   // ==========================================================================
@@ -310,25 +320,22 @@
   // ==========================================================================
   
   function init() {
-    // Button event listeners
-    const buttons = document.querySelectorAll('.neon-button');
+    // Button event listeners using data-action attributes
+    const buttons = document.querySelectorAll('.neon-button[data-action]');
     buttons.forEach(button => {
-      const buttonText = button.querySelector('.btn-text');
-      if (!buttonText) return;
+      const action = button.dataset.action;
       
-      const text = buttonText.textContent.trim().toUpperCase();
-      
-      switch (text) {
-        case 'NEW GAME':
+      switch (action) {
+        case 'new-game':
           button.addEventListener('click', handleNewGame);
           break;
-        case 'UNDO MOVE':
+        case 'undo-move':
           button.addEventListener('click', handleUndoMove);
           break;
-        case 'HINT':
+        case 'hint':
           button.addEventListener('click', handleHint);
           break;
-        case 'DEMO: AI THINKING':
+        case 'demo-thinking':
           button.addEventListener('click', handleDemoThinking);
           break;
         default:

@@ -79,7 +79,6 @@
 
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
 }
 
 body {
@@ -89,7 +88,6 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
-  cursor: crosshair;
   
   /* Boot sequence animation */
   animation: boot-sequence 1.5s ease-out;
@@ -115,7 +113,7 @@ body {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 100;
   background: repeating-linear-gradient(
     0deg,
     rgba(0, 0, 0, 0.15) 0px,
@@ -255,6 +253,7 @@ body {
   width: 100%;
   height: 100%;
   opacity: 0;
+  z-index: -1;
 }
 
 .glitch-text::before {
@@ -279,6 +278,20 @@ body {
   91% { opacity: 0.6; transform: translateX(2px); }
   93% { opacity: 0; transform: translateX(-2px); }
   95% { opacity: 0.4; transform: translateX(1px); }
+}
+
+/* Triggered Glitch Effect (via JS) */
+.glitch-active {
+  animation: glitch-triggered 0.3s linear;
+}
+
+@keyframes glitch-triggered {
+  0% { transform: translateX(0); filter: none; }
+  20% { transform: translateX(-3px); filter: hue-rotate(90deg); }
+  40% { transform: translateX(3px); filter: hue-rotate(-90deg); }
+  60% { transform: translateX(-2px); filter: hue-rotate(45deg); }
+  80% { transform: translateX(2px); filter: hue-rotate(-45deg); }
+  100% { transform: translateX(0); filter: none; }
 }
 
 /* LED Indicators */
@@ -828,9 +841,8 @@ body {
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
   
   .grid-horizon {
@@ -847,10 +859,6 @@ body {
 :focus {
   outline: 2px solid var(--color-cyan);
   outline-offset: 2px;
-}
-
-:focus:not(:focus-visible) {
-  outline: none;
 }
 
 :focus-visible {

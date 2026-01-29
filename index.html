@@ -27,12 +27,12 @@
     <!-- Header / System Status -->
     <header class="system-header">
       <div class="header-left">
-        <span class="led-indicator led-active"></span>
+        <span class="led-indicator led-active" aria-label="System active"></span>
         <h1 class="system-title glitch-text" data-text="COPILOT CHESS">COPILOT CHESS</h1>
       </div>
       <div class="header-right">
         <span class="status-badge">[STATUS] ONLINE</span>
-        <span class="led-indicator led-pulse"></span>
+        <span class="led-indicator led-pulse" aria-label="Activity indicator"></span>
       </div>
     </header>
 
@@ -68,7 +68,7 @@
       <section class="board-container">
         <div class="board-frame">
           <!-- Placeholder for the actual chessboard - remains unchanged per requirements -->
-          <div id="chessboard" class="chessboard-placeholder">
+          <div id="chessboard" class="chessboard-placeholder" role="application" aria-label="Chess board">
             <!-- Chess pieces and board will be rendered here -->
             <!-- The actual chessboard implementation remains UNCHANGED -->
             <div class="board-demo">
@@ -97,7 +97,7 @@
           <span class="panel-title">// MOVE LOG</span>
           <span class="terminal-cursor">_</span>
         </div>
-        <div class="panel-content terminal-output" id="move-history">
+        <div class="panel-content terminal-output" id="move-history" role="log" aria-live="polite" aria-label="Move history log">
           <div class="terminal-line">
             <span class="terminal-prompt">&gt;</span>
             <span class="terminal-timestamp">[00:00:00]</span>
@@ -130,18 +130,18 @@
     <!-- Bottom Controls -->
     <footer class="controls-bar">
       <div class="control-group">
-        <button class="neon-button neon-cyan" type="button">
+        <button class="neon-button neon-cyan" type="button" data-action="new-game" aria-label="Start new game">
           <span class="btn-text">NEW GAME</span>
         </button>
-        <button class="neon-button neon-magenta" type="button">
+        <button class="neon-button neon-magenta" type="button" data-action="undo-move" aria-label="Undo last move">
           <span class="btn-text">UNDO MOVE</span>
         </button>
-        <button class="neon-button neon-violet" type="button">
+        <button class="neon-button neon-violet" type="button" data-action="hint" aria-label="Get move hint">
           <span class="btn-text">HINT</span>
         </button>
       </div>
       <div class="control-group">
-        <button class="neon-button neon-laser" type="button" id="demo-thinking">
+        <button class="neon-button neon-laser" type="button" id="demo-thinking" data-action="demo-thinking" aria-label="Demo AI thinking animation">
           <span class="btn-text">DEMO: AI THINKING</span>
         </button>
       </div>
