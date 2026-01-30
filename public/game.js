@@ -33,6 +33,27 @@ let isBoardFlipped = false;
 let currentDisplayedFen = null; // Track the currently displayed position
 let currentModelName = null; // Store the current AI model name
 
+// Helper function to add a move to the history
+// color: 'w' for white, 'b' for black
+function addMoveToHistory(san, time, color) {
+  const timeStr = time ? ` (${time})` : '';
+  
+  if (color === 'w') {
+    // White move: create a new line
+    moveCount++;
+    const moveEntry = document.createElement('div');
+    moveEntry.innerHTML = `${moveCount}. ${san}${timeStr} - ...`;
+    moveHistory.appendChild(moveEntry);
+  } else {
+    // Black move: complete the existing line
+    const existingEntry = moveHistory.querySelector('div:last-child');
+    if (existingEntry && existingEntry.innerHTML.includes('- ...')) {
+      existingEntry.innerHTML = existingEntry.innerHTML.replace('- ...', `- ${san}${timeStr}`);
+    }
+  }
+  moveHistory.scrollTop = moveHistory.scrollHeight;
+}
+
 // DOM elements
 const gameSetup = document.getElementById('gameSetup');
 const gameContainer = document.getElementById('gameContainer');
@@ -219,7 +240,6 @@ async function startNewGame() {
           // Animate AI's first move
           await animateMove(aiData.aiMove.from, aiData.aiMove.to);
           lastMove = { from: aiData.aiMove.from, to: aiData.aiMove.to };
-          moveCount = 1;
           
           // Update board with new position
           renderBoard(aiData.fen);
@@ -227,12 +247,9 @@ async function startNewGame() {
           // Save to history
           positionHistory.push({ fen: aiData.fen, lastMove: lastMove });
           
-          // Add to move history
+          // Add to move history (AI played white)
           const aiTime = aiData.aiThinkTime ? formatMoveTime(aiData.aiThinkTime) : '';
-          const aiTimeStr = aiTime ? ` (${aiTime})` : '';
-          const moveEntry = document.createElement('div');
-          moveEntry.innerHTML = `1. ${aiData.aiMove.san}${aiTimeStr} - ...`;
-          moveHistory.appendChild(moveEntry);
+          addMoveToHistory(aiData.aiMove.san, aiTime, 'w');
         }
       } catch (error) {
         console.error('Error getting AI first move:', error);
@@ -560,6 +577,11 @@ async function makeMove(from, to) {
   // 2. IMMÉDIATEMENT après l'animation: allumer les cases du joueur
   lastMove = { from: from, to: to };
   highlightLastMove();
+  
+  // 2b. Afficher immédiatement le coup du joueur dans l'historique (notation temporaire)
+  const playerMoveColor = playerColor === 'white' ? 'w' : 'b';
+  // On utilise from-to comme placeholder, le SAN sera mis à jour après
+  addMoveToHistory(`${from}-${to}`, playerTime, playerMoveColor);
 
   // 3. Then call the server (Copilot SDK)
   document.querySelector('.copilot-logo')?.classList.add('thinking');
@@ -614,15 +636,26 @@ async function makeMove(from, to) {
     historyIndex = -1;
     isViewingHistory = false;
 
-    // Update move history with timing
-    moveCount++;
-    const aiTime = data.aiThinkTime ? formatMoveTime(data.aiThinkTime) : '';
-    const moveEntry = document.createElement('div');
-    const playerTimeStr = playerTime ? ` (${playerTime})` : '';
-    const aiTimeStr = aiTime ? ` (${aiTime})` : '';
-    moveEntry.innerHTML = `${moveCount}. ${data.playerMove?.san || '...'}${playerTimeStr} - ${data.aiMove?.san || 'N/A'}${aiTimeStr}`;
-    moveHistory.appendChild(moveEntry);
-    moveHistory.scrollTop = moveHistory.scrollHeight;
+    // Update move history: replace the temporary player move with the real SAN
+    const lastEntry = moveHistory.querySelector('div:last-child');
+    if (lastEntry && data.playerMove?.san) {
+      // Replace the temporary "from-to" with the real SAN
+      const playerMoveColor = playerColor === 'white' ? 'w' : 'b';
+      if (playerMoveColor === 'w') {
+        // Player is white: update "N. from-to (time) - ..." to "N. SAN (time) - ..."
+        lastEntry.innerHTML = lastEntry.innerHTML.replace(`${from}-${to}`, data.playerMove.san);
+      } else {
+        // Player is black: update "- from-to (time)" to "- SAN (time)"
+        lastEntry.innerHTML = lastEntry.innerHTML.replace(`${from}-${to}`, data.playerMove.san);
+      }
+    }
+    
+    // Add AI move if present
+    if (data.aiMove?.san) {
+      const aiTime = data.aiThinkTime ? formatMoveTime(data.aiThinkTime) : '';
+      const aiMoveColor = playerColor === 'white' ? 'b' : 'w';
+      addMoveToHistory(data.aiMove.san, aiTime, aiMoveColor);
+    }
     
     // Reset timer for next turn
     turnStartTime = Date.now();
