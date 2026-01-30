@@ -335,6 +335,11 @@ body {
   font-family: inherit;
   transition: all 0.2s ease;
   position: relative;
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .start-btn::before {
@@ -369,6 +374,10 @@ body {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.setup-card .start-btn + .start-btn {
+  margin-top: 14px;
 }
 
 /* Game Container */
@@ -487,7 +496,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 10px;
   min-height: 38px;
 }
 
@@ -502,7 +511,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
+}
+
+.turn-indicator .thinking-text {
+  letter-spacing: 0.02em;
 }
 
 @keyframes copilotPulse {
@@ -529,10 +542,94 @@ body {
 .move-history {
   margin-bottom: 20px;
   flex: 1;
+
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+.action-toolbar {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 0 2px;
+}
+
+.action-toolbar .action-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn {
+  position: relative;
+}
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-btn::before,
+.icon-btn::after {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.icon-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  z-index: 5;
+}
+
+/* Keep tooltips from touching panel borders */
+.action-toolbar .icon-btn:first-child::after {
+  left: -12px;
+  transform: none;
+}
+
+.action-toolbar .icon-btn:last-child::after {
+  left: auto;
+  right: -12px;
+  transform: none;
+}
+
+.icon-btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 5px);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--border-color);
+  z-index: 5;
+}
+
+.icon-btn:hover::before,
+.icon-btn:hover::after,
+.icon-btn:focus-visible::before,
+.icon-btn:focus-visible::after {
+  opacity: 1;
 }
 
 .move-history h3 {
@@ -848,7 +945,7 @@ footer {
 }
 
 .captured-label {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 400;
   color: var(--text-muted);
   letter-spacing: 0.05em;

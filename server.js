@@ -11,7 +11,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '200kb' }));
 app.use(express.static('public'));
 
 // Store active games
@@ -105,6 +105,31 @@ async function getCopilotMove(session, chessInstance, aiColor = 'black') {
   return aiSan;
 }
 
+function buildGameSnapshot(game, gameId) {
+  const { chess, model, playerColor, aiColor } = game;
+  return {
+    version: 1,
+    gameId,
+    fen: chess.fen(),
+    moves: chess.history(),
+    model,
+    playerColor,
+    aiColor,
+  };
+}
+
+function validateSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== 'object') return 'Snapshot must be an object';
+  if (snapshot.version !== 1) return 'Unsupported snapshot version';
+  if (typeof snapshot.fen !== 'string' || !snapshot.fen.trim()) return 'Missing fen';
+  if (!Array.isArray(snapshot.moves)) return 'Missing moves array';
+  if (snapshot.moves.some(m => typeof m !== 'string' || !m.trim())) return 'Moves must be non-empty strings';
+  if (snapshot.playerColor && !['white', 'black'].includes(snapshot.playerColor)) return 'Invalid playerColor';
+  if (snapshot.aiColor && !['white', 'black'].includes(snapshot.aiColor)) return 'Invalid aiColor';
+  if (snapshot.model && typeof snapshot.model !== 'string') return 'Invalid model';
+  return null;
+}
+
 // API Routes
 
 // List available models
@@ -160,6 +185,66 @@ app.post('/api/game/new', async (req, res) => {
   }
 });
 
+// Export a game snapshot (FEN + SAN history)
+app.get('/api/game/:gameId/export', (req, res) => {
+  const { gameId } = req.params;
+  const game = games.get(gameId);
+  if (!game) return res.status(404).json({ error: 'Game not found' });
+  res.json(buildGameSnapshot(game, gameId));
+});
+
+// Import a game snapshot (creates a NEW gameId)
+app.post('/api/game/import', async (req, res) => {
+  const snapshot = req.body;
+  const validationError = validateSnapshot(snapshot);
+  if (validationError) return res.status(400).json({ error: validationError });
+
+  try {
+    await modelsReady;
+    const playerColor = snapshot.playerColor || 'white';
+    const aiColor = snapshot.aiColor || (playerColor === 'white' ? 'black' : 'white');
+    const modelName = resolveModel(snapshot.model);
+
+    const chess = new Chess();
+    for (const san of snapshot.moves) {
+      const result = chess.move(san);
+      if (!result) {
+        return res.status(400).json({ error: `Invalid move in snapshot: ${san}` });
+      }
+    }
+
+    const finalFen = chess.fen();
+    if (finalFen !== snapshot.fen) {
+      return res.status(400).json({
+        error: 'Snapshot mismatch: moves do not lead to provided FEN',
+        computedFen: finalFen,
+      });
+    }
+
+    const gameId = crypto.randomUUID();
+    const session = await createCopilotSession(modelName, aiColor);
+    games.set(gameId, { chess, session, model: modelName, playerColor, aiColor });
+
+    res.json({
+      gameId,
+      fen: finalFen,
+      moves: chess.history(),
+      model: modelName,
+      playerColor,
+      aiColor,
+      isGameOver: chess.isGameOver(),
+      isCheck: chess.isCheck(),
+      isCheckmate: chess.isCheckmate(),
+      isDraw: chess.isDraw(),
+      turn: chess.turn() === 'w' ? 'white' : 'black',
+      legalMoves: chess.moves(),
+    });
+  } catch (error) {
+    console.error('Error importing snapshot:', error);
+    res.status(500).json({ error: error.message || 'Failed to import snapshot' });
+  }
+});
+
 // Get AI's first move (when AI plays white)
 app.post('/api/game/:gameId/ai-first-move', async (req, res) => {
   const { gameId } = req.params;
@@ -204,6 +289,58 @@ app.post('/api/game/:gameId/ai-first-move', async (req, res) => {
   }
 });
 
+// Get AI move for any position (when it's AI's turn)
+app.post('/api/game/:gameId/ai-move', async (req, res) => {
+  const { gameId } = req.params;
+  const game = games.get(gameId);
+
+  if (!game) {
+    return res.status(404).json({ error: 'Game not found' });
+  }
+
+  const { chess, session, model, aiColor } = game;
+  const aiTurn = aiColor === 'white' ? 'w' : 'b';
+  if (chess.turn() !== aiTurn) {
+    return res.status(400).json({ error: 'Not AI turn' });
+  }
+
+  if (chess.isGameOver()) {
+    return res.status(400).json({ error: 'Game is over' });
+  }
+
+  try {
+    const aiStartTime = Date.now();
+    const aiMoveSan = await getCopilotMove(session, chess, aiColor);
+    const aiThinkTime = Date.now() - aiStartTime;
+
+    const aiResult = chess.move(aiMoveSan);
+    if (!aiResult) {
+      throw new Error(`Copilot returned illegal move: ${aiMoveSan}`);
+    }
+
+    res.json({
+      fen: chess.fen(),
+      aiMove: {
+        san: aiResult.san,
+        from: aiResult.from,
+        to: aiResult.to,
+        color: aiResult.color,
+        captured: aiResult.captured || null,
+      },
+      aiThinkTime,
+      model,
+      isGameOver: chess.isGameOver(),
+      isCheck: chess.isCheck(),
+      isCheckmate: chess.isCheckmate(),
+      isDraw: chess.isDraw(),
+      turn: chess.turn() === 'w' ? 'white' : 'black',
+    });
+  } catch (error) {
+    console.error('AI move error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get game state
 app.get('/api/game/:gameId', (req, res) => {
   const { gameId } = req.params;
@@ -213,12 +350,14 @@ app.get('/api/game/:gameId', (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   
-  const { chess, model } = game;
+  const { chess, model, playerColor, aiColor } = game;
   
   res.json({
     fen: chess.fen(),
     pgn: chess.pgn(),
     model,
+    playerColor,
+    aiColor,
     isGameOver: chess.isGameOver(),
     isCheck: chess.isCheck(),
     isCheckmate: chess.isCheckmate(),

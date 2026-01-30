@@ -28,6 +28,10 @@
         <button id="startGameBtn" class="start-btn">
           <span>⚔️ START BATTLE ⚔️</span>
         </button>
+
+        <button id="loadGameBtnSetup" class="start-btn">
+          <span>📂 LOAD GAME</span>
+        </button>
       </div>
     </div>
 
@@ -47,19 +51,38 @@
           </div>
 
           <div class="move-history">
-            <h3>📜 Move History</h3>
+            <h3>Move History</h3>
             <div id="moveHistory" class="moves-list"></div>
           </div>
 
-          <button id="newGameBtn" class="action-btn">
-            🔄 New Game
-          </button>
-          <button id="flipBoardBtn" class="action-btn">
-            🔄 Flip Board
-          </button>
-          <button id="resignBtn" class="action-btn resign-btn">
-            🏳️ Resign
-          </button>
+          <div class="action-toolbar" aria-label="Game actions">
+            <button id="saveGameBtn" class="action-btn icon-btn" type="button" aria-label="Save Game" data-tooltip="Save Game">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M5 3h11l3 3v15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v6h10V7.5L15.5 5H7Zm0 16h10v-8H7v8Zm2-1.5h6v-4H9v4Z"/>
+              </svg>
+            </button>
+            <button id="loadGameBtn" class="action-btn icon-btn" type="button" aria-label="Load Game" data-tooltip="Load Game">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M10 4h4l2 2h4a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h6Zm12 9v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7h9l-2 2H2v2h18v-2h-7l2-2h7Z"/>
+              </svg>
+            </button>
+            <button id="newGameBtn" class="action-btn icon-btn" type="button" aria-label="New Game" data-tooltip="New Game">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M12 5a7 7 0 1 1-6.32 4H3l3.5-3.5L10 9H7.77A5 5 0 1 0 12 7V5Zm1 5v4h4v2h-6V10h2Z"/>
+              </svg>
+            </button>
+            <button id="flipBoardBtn" class="action-btn icon-btn" type="button" aria-label="Flip Board" data-tooltip="Flip Board">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M7 4h2v11h3l-4 4-4-4h3V4Zm10 16h-2V9h-3l4-4 4 4h-3v11Z"/>
+              </svg>
+            </button>
+            <button id="resignBtn" class="action-btn icon-btn resign-btn" type="button" aria-label="Resign" data-tooltip="Resign">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M6 2h2v20H6v-2H4v-2h2V2Zm4 2h9l-2.5 4L19 12h-9V4Z"/>
+              </svg>
+            </button>
+          </div>
+          <input id="loadGameFileInput" type="file" accept="application/json" style="display:none" />
         </div>
       </div>
 
@@ -79,12 +102,12 @@
 
       <div class="captured-pieces-panel">
         <div class="captured-pieces-bar ai-captured">
-          <div class="captured-label">🤖 AI</div>
+          <div class="captured-label">AI</div>
           <div id="aiCaptured" class="captured-list"></div>
           <span id="aiMaterialScore" class="material-score"></span>
         </div>
         <div class="captured-pieces-bar player-captured">
-          <div class="captured-label">👤 You</div>
+          <div class="captured-label">You</div>
           <div id="playerCaptured" class="captured-list"></div>
           <span id="playerMaterialScore" class="material-score"></span>
         </div>
