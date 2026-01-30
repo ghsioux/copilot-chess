@@ -314,12 +314,33 @@ async function applyImportedGame(data) {
   gameStatus.textContent = '';
   moveHistory.innerHTML = '';
 
-  // Rebuild move list
+  // Rebuild move list display
   const moves = Array.isArray(data.moves) ? data.moves : [];
   rebuildMoveListFromSan(moves);
 
-  // Rebuild position history + captured pieces so arrow browsing + panels match
-  rebuildDerivedStateFromSanMoves(moves);
+  // Use server-provided position history and captured pieces
+  if (data.positionHistory && data.positionHistory.length > 0) {
+    positionHistory = data.positionHistory;
+    lastMove = positionHistory[positionHistory.length - 1]?.lastMove || null;
+  } else {
+    // Fallback to initial position only
+    positionHistory = [{ fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', lastMove: null }];
+  }
+  
+  // Use server-provided captured pieces
+  if (data.capturedByWhite && data.capturedByBlack) {
+    if (playerColor === 'white') {
+      capturedByPlayer = data.capturedByWhite;
+      capturedByAI = data.capturedByBlack;
+    } else {
+      capturedByPlayer = data.capturedByBlack;
+      capturedByAI = data.capturedByWhite;
+    }
+  } else {
+    capturedByPlayer = [];
+    capturedByAI = [];
+  }
+  updateCapturedPiecesDisplay();
 
   // Render final board position
   renderBoard(data.fen);
@@ -354,38 +375,71 @@ function rebuildMoveListFromSan(moves) {
 }
 
 function rebuildDerivedStateFromSanMoves(moves) {
+  console.log('🔄 rebuildDerivedStateFromSanMoves called with moves:', moves);
+  console.log('🔄 playerColor:', playerColor);
+  console.log('🔄 window.Chess available:', !!window.Chess);
+  console.log('🔄 typeof Chess:', typeof Chess);
+  
   positionHistory = [];
   capturedByPlayer = [];
   capturedByAI = [];
 
-  if (!window.Chess) {
+  // Try both window.Chess and just Chess
+  const ChessClass = window.Chess || (typeof Chess !== 'undefined' ? Chess : null);
+  
+  if (!ChessClass) {
+    console.error('❌ Chess not available!');
     // Fallback: still allow playing, but arrow history/captures won't restore
     positionHistory = [{ fen: currentDisplayedFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', lastMove: null }];
     updateCapturedPiecesDisplay();
     return;
   }
 
-  const chess = new window.Chess();
+  console.log('✅ ChessClass found:', ChessClass);
+  const chess = new ChessClass();
+  console.log('✅ chess instance created, initial FEN:', chess.fen());
   positionHistory.push({ fen: chess.fen(), lastMove: null });
 
   const playerTurnChar = playerColor === 'white' ? 'w' : 'b';
+  console.log('🔄 playerTurnChar:', playerTurnChar);
 
   for (const san of moves) {
     const result = chess.move(san);
-    if (!result) break;
+    console.log('🔄 Move result for', san, ':', result);
+    if (!result) {
+      console.error('❌ Failed to apply move:', san);
+      break;
+    }
 
     const lm = { from: result.from, to: result.to };
     positionHistory.push({ fen: chess.fen(), lastMove: lm });
 
     if (result.captured) {
+      // result.captured is always lowercase (piece type only: p, n, b, r, q, k)
+      // The captured piece belongs to the OPPONENT of who made the move
+      // If white (w) captured, the captured piece is black (lowercase)
+      // If black (b) captured, the captured piece is white (UPPERCASE)
       const capturedPieceCode = result.color === 'w'
-        ? result.captured
-        : result.captured.toUpperCase();
-      if (result.color === playerTurnChar) capturedByPlayer.push(capturedPieceCode);
-      else capturedByAI.push(capturedPieceCode);
+        ? result.captured.toLowerCase()   // Black piece captured (lowercase)
+        : result.captured.toUpperCase();  // White piece captured (UPPERCASE)
+      
+      console.log('🔄 Capture: color=', result.color, 'captured=', result.captured, 'capturedPieceCode=', capturedPieceCode);
+      
+      // Track who captured what
+      if (result.color === playerTurnChar) {
+        capturedByPlayer.push(capturedPieceCode);
+        console.log('🔄 Added to capturedByPlayer:', capturedPieceCode);
+      } else {
+        capturedByAI.push(capturedPieceCode);
+        console.log('🔄 Added to capturedByAI:', capturedPieceCode);
+      }
     }
   }
 
+  console.log('🔄 Final positionHistory length:', positionHistory.length);
+  console.log('🔄 Final capturedByPlayer:', capturedByPlayer);
+  console.log('🔄 Final capturedByAI:', capturedByAI);
+  
   // Set lastMove to the last played move for highlighting
   lastMove = positionHistory[positionHistory.length - 1]?.lastMove || null;
   updateCapturedPiecesDisplay();

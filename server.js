@@ -107,11 +107,44 @@ async function getCopilotMove(session, chessInstance, aiColor = 'black') {
 
 function buildGameSnapshot(game, gameId) {
   const { chess, model, playerColor, aiColor } = game;
+  
+  // Rebuild position history and captured pieces by replaying moves
+  const tempChess = new Chess();
+  const positionHistory = [{ fen: tempChess.fen(), lastMove: null }];
+  const capturedByWhite = []; // pieces captured by white player
+  const capturedByBlack = []; // pieces captured by black player
+  
+  const moves = chess.history({ verbose: true });
+  
+  for (const move of moves) {
+    tempChess.move(move.san);
+    const lm = { from: move.from, to: move.to };
+    positionHistory.push({ fen: tempChess.fen(), lastMove: lm });
+    
+    if (move.captured) {
+      // move.captured is lowercase piece type
+      // White capturing means a black piece (lowercase) was captured
+      // Black capturing means a white piece (UPPERCASE) was captured
+      const capturedPieceCode = move.color === 'w'
+        ? move.captured.toLowerCase()   // Black piece
+        : move.captured.toUpperCase();  // White piece
+      
+      if (move.color === 'w') {
+        capturedByWhite.push(capturedPieceCode);
+      } else {
+        capturedByBlack.push(capturedPieceCode);
+      }
+    }
+  }
+  
   return {
-    version: 1,
+    version: 2,  // Bump version for new format
     gameId,
     fen: chess.fen(),
-    moves: chess.history(),
+    moves: chess.history(),  // SAN moves for display
+    positionHistory,         // Full position history for navigation
+    capturedByWhite,         // Pieces captured by white
+    capturedByBlack,         // Pieces captured by black
     model,
     playerColor,
     aiColor,
@@ -120,7 +153,7 @@ function buildGameSnapshot(game, gameId) {
 
 function validateSnapshot(snapshot) {
   if (!snapshot || typeof snapshot !== 'object') return 'Snapshot must be an object';
-  if (snapshot.version !== 1) return 'Unsupported snapshot version';
+  if (snapshot.version !== 1 && snapshot.version !== 2) return 'Unsupported snapshot version';
   if (typeof snapshot.fen !== 'string' || !snapshot.fen.trim()) return 'Missing fen';
   if (!Array.isArray(snapshot.moves)) return 'Missing moves array';
   if (snapshot.moves.some(m => typeof m !== 'string' || !m.trim())) return 'Moves must be non-empty strings';
@@ -225,10 +258,42 @@ app.post('/api/game/import', async (req, res) => {
     const session = await createCopilotSession(modelName, aiColor);
     games.set(gameId, { chess, session, model: modelName, playerColor, aiColor });
 
+    // Rebuild position history and captured pieces
+    const tempChess = new Chess();
+    const positionHistory = [{ fen: tempChess.fen(), lastMove: null }];
+    const capturedByWhite = [];
+    const capturedByBlack = [];
+    
+    const verboseMoves = chess.history({ verbose: true });
+    // Reset and replay to build history
+    tempChess.reset();
+    for (const move of verboseMoves) {
+      tempChess.move(move.san);
+      positionHistory.push({ 
+        fen: tempChess.fen(), 
+        lastMove: { from: move.from, to: move.to } 
+      });
+      
+      if (move.captured) {
+        const capturedPieceCode = move.color === 'w'
+          ? move.captured.toLowerCase()
+          : move.captured.toUpperCase();
+        
+        if (move.color === 'w') {
+          capturedByWhite.push(capturedPieceCode);
+        } else {
+          capturedByBlack.push(capturedPieceCode);
+        }
+      }
+    }
+
     res.json({
       gameId,
       fen: finalFen,
       moves: chess.history(),
+      positionHistory,
+      capturedByWhite,
+      capturedByBlack,
       model: modelName,
       playerColor,
       aiColor,
