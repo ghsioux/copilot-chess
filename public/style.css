@@ -682,7 +682,6 @@ body {
 .action-btn:hover {
   background: rgba(139, 210, 255, 0.08);
   border-color: var(--border-glow);
-  transform: translateY(-1px);
 }
 
 .resign-btn {
