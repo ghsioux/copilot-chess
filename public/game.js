@@ -149,7 +149,7 @@ newGameBtn.addEventListener('click', () => {
 flipBoardBtn.addEventListener('click', flipBoard);
 resignBtn.addEventListener('click', () => {
   if (confirm('Are you sure you want to resign? 🏳️')) {
-    gameStatus.innerHTML = '🏳️ You resigned! Better luck next time!';
+    gameStatus.innerHTML = 'You resigned! 🏳️';
     disableBoard();
   }
 });
