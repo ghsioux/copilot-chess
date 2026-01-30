@@ -27,11 +27,17 @@ body {
   min-height: 100vh;
   color: var(--text-primary);
   padding: 20px;
+  padding-bottom: 50px;
+  position: relative;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  min-height: calc(100vh - 90px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 @keyframes pulse {
@@ -773,10 +779,12 @@ body {
 
 /* Footer */
 footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   text-align: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
+  padding: 12px 20px;
   font-size: 0.75rem;
   color: var(--text-muted);
   letter-spacing: 0.1em;
