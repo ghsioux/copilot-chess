@@ -47,12 +47,73 @@ const currentDifficulty = document.getElementById('currentDifficulty');
 const moveHistory = document.getElementById('moveHistory');
 const modelSelect = document.getElementById('modelSelect');
 
-// Event listeners
-if (modelSelect) {
-  modelSelect.addEventListener('change', (e) => {
-    selectedModel = e.target.value;
+// Custom dropdown elements
+const modelDropdown = document.getElementById('modelDropdown');
+const dropdownSelected = document.getElementById('dropdownSelected');
+const dropdownOptions = document.getElementById('dropdownOptions');
+
+// Custom dropdown functionality
+function initCustomDropdown() {
+  if (!dropdownSelected || !dropdownOptions || !modelDropdown) return;
+
+  // Toggle dropdown on click
+  dropdownSelected.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modelDropdown.classList.toggle('open');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!modelDropdown.contains(e.target)) {
+      modelDropdown.classList.remove('open');
+    }
+  });
+
+  // Close on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      modelDropdown.classList.remove('open');
+    }
   });
 }
+
+function populateDropdown(models) {
+  if (!dropdownOptions) return;
+  
+  dropdownOptions.innerHTML = models.map((m, index) => 
+    `<div class="dropdown-option${index === 0 ? ' selected' : ''}" data-value="${m.name}">${m.name}</div>`
+  ).join('');
+
+  // Add click handlers to options
+  dropdownOptions.querySelectorAll('.dropdown-option').forEach(option => {
+    option.addEventListener('click', (e) => {
+      const value = option.dataset.value;
+      selectDropdownOption(value);
+      modelDropdown.classList.remove('open');
+    });
+  });
+}
+
+function selectDropdownOption(value) {
+  selectedModel = value;
+  if (modelSelect) modelSelect.value = value;
+  
+  // Update selected text
+  const selectedTextEl = dropdownSelected.querySelector('.selected-text');
+  if (selectedTextEl) selectedTextEl.textContent = value;
+  
+  // Update selected state in options
+  dropdownOptions.querySelectorAll('.dropdown-option').forEach(opt => {
+    opt.classList.toggle('selected', opt.dataset.value === value);
+  });
+}
+
+function setDropdownText(text) {
+  const selectedTextEl = dropdownSelected?.querySelector('.selected-text');
+  if (selectedTextEl) selectedTextEl.textContent = text;
+}
+
+initCustomDropdown();
 
 startGameBtn.disabled = true;
 startGameBtn.addEventListener('click', startNewGame);
@@ -75,21 +136,19 @@ async function loadModels() {
     const models = data.models || [];
     if (!models.length) throw new Error('No models');
 
-    modelSelect.innerHTML = models.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+    populateDropdown(models);
     selectedModel = models[0].name;
-    modelSelect.value = selectedModel;
+    selectDropdownOption(selectedModel);
     startGameBtn.disabled = false;
   } catch (error) {
     console.error('Error loading models:', error);
-    if (modelSelect) {
-      modelSelect.innerHTML = '<option value="" disabled selected>No models available</option>';
-    }
+    setDropdownText('No models available');
     startGameBtn.disabled = true;
     alert('Unable to load models. Please try again later.');
   }
 }
 
-if (modelSelect) {
+if (modelDropdown) {
   loadModels();
 }
 
