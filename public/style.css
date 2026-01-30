@@ -391,6 +391,16 @@ body {
   align-items: center;
 }
 
+.copilot-logo.thinking img {
+  animation: shake 0.15s ease-in-out infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-2px) rotate(-1deg); }
+  75% { transform: translateX(2px) rotate(1deg); }
+}
+
 .copilot-logo img {
   max-width: 200px;
   height: auto;
@@ -480,6 +490,13 @@ body {
   height: 1.3em;
   vertical-align: middle;
   animation: copilotPulse 1.5s ease-in-out infinite;
+}
+
+.turn-indicator:has(.copilot-icon) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 
 @keyframes copilotPulse {
