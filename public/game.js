@@ -144,7 +144,7 @@ startGameBtn.disabled = true;
 startGameBtn.addEventListener('click', startNewGame);
 newGameBtn.addEventListener('click', () => {
   gameContainer.style.display = 'none';
-  gameSetup.style.display = 'block';
+  gameSetup.style.display = 'flex';
 });
 flipBoardBtn.addEventListener('click', flipBoard);
 resignBtn.addEventListener('click', () => {
