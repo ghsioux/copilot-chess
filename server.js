@@ -271,7 +271,8 @@ app.post('/api/game/import', async (req, res) => {
       tempChess.move(move.san);
       positionHistory.push({ 
         fen: tempChess.fen(), 
-        lastMove: { from: move.from, to: move.to } 
+        lastMove: { from: move.from, to: move.to },
+        isCheck: tempChess.isCheck()
       });
       
       if (move.captured) {
@@ -287,6 +288,11 @@ app.post('/api/game/import', async (req, res) => {
       }
     }
 
+    // Determine who is in check for the UI
+    const currentTurn = chess.turn() === 'w' ? 'white' : 'black';
+    const aiInCheck = chess.isCheck() && currentTurn === aiColor;
+    const playerInCheck = chess.isCheck() && currentTurn === playerColor;
+
     res.json({
       gameId,
       fen: finalFen,
@@ -299,6 +305,8 @@ app.post('/api/game/import', async (req, res) => {
       aiColor,
       isGameOver: chess.isGameOver(),
       isCheck: chess.isCheck(),
+      aiInCheck,
+      playerInCheck,
       isCheckmate: chess.isCheckmate(),
       isDraw: chess.isDraw(),
       turn: chess.turn() === 'w' ? 'white' : 'black',
@@ -383,6 +391,10 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
       throw new Error(`Copilot returned illegal move: ${aiMoveSan}`);
     }
 
+    const playerInCheck = chess.isCheck();
+    const playerCheckmate = chess.isCheckmate();
+    console.log(`🤖 AI played ${aiResult.san} | PlayerCheck: ${playerInCheck} | AICheck: false | PlayerCheckmate: ${playerCheckmate} | AICheckmate: false | FEN: ${chess.fen()}`);
+
     res.json({
       fen: chess.fen(),
       aiMove: {
@@ -394,9 +406,9 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
       },
       aiThinkTime,
       model,
+      playerInCheck,
+      playerCheckmate,
       isGameOver: chess.isGameOver(),
-      isCheck: chess.isCheck(),
-      isCheckmate: chess.isCheckmate(),
       isDraw: chess.isDraw(),
       turn: chess.turn() === 'w' ? 'white' : 'black',
     });
@@ -432,7 +444,7 @@ app.get('/api/game/:gameId', (req, res) => {
   });
 });
 
-// Make a move
+// Make player move only (AI will be requested separately)
 app.post('/api/game/:gameId/move', async (req, res) => {
   const { gameId } = req.params;
   const { move } = req.body;
@@ -442,7 +454,7 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   
-  const { chess, session, model, aiColor } = game;
+  const { chess } = game;
   
   try {
     // Make player move
@@ -461,21 +473,39 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     };
 
     const fenAfterPlayer = chess.fen();
+    // After player move: AI is now to move, so isCheck() tells if AI king is in check
+    const aiInCheck = chess.isCheck();
+    const aiCheckmate = chess.isCheckmate();
+    const isGameOver = chess.isGameOver();
+    console.log(`♟️ PLAYER played ${result.san} | PlayerCheck: false | AICheck: ${aiInCheck} | PlayerCheckmate: false | AICheckmate: ${aiCheckmate} | FEN: ${fenAfterPlayer}`);
     
-    // Check if game is over after player move
-    if (chess.isGameOver()) {
-      return res.json({
-        fen: chess.fen(),
-        fenAfterPlayer,
-        isGameOver: true,
-        isCheckmate: chess.isCheckmate(),
-        isDraw: chess.isDraw(),
-        playerMove,
-        turn: chess.turn() === 'w' ? 'white' : 'black',
-        playerMadeLastMove: true
-      });
-    }
-    
+    res.json({
+      fen: fenAfterPlayer,
+      playerMove,
+      aiInCheck,
+      aiCheckmate,
+      isGameOver,
+      isDraw: chess.isDraw(),
+      turn: chess.turn() === 'w' ? 'white' : 'black'
+    });
+  } catch (error) {
+    console.error('Player move error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get AI move (call after player move)
+app.post('/api/game/:gameId/ai-move', async (req, res) => {
+  const { gameId } = req.params;
+  const game = games.get(gameId);
+  
+  if (!game) {
+    return res.status(404).json({ error: 'Game not found' });
+  }
+  
+  const { chess, session, model, aiColor } = game;
+  
+  try {
     // Copilot makes a move (with timing)
     const aiStartTime = Date.now();
     const aiMoveSan = await getCopilotMove(session, chess, aiColor);
@@ -494,21 +524,25 @@ app.post('/api/game/:gameId/move', async (req, res) => {
       captured: aiResult.captured || null
     };
     
+    // After AI move: Player is now to move, so isCheck() tells if Player king is in check
+    const playerInCheck = chess.isCheck();
+    const playerCheckmate = chess.isCheckmate();
+    const isGameOver = chess.isGameOver();
+    console.log(`🤖 AI played ${aiResult.san} | PlayerCheck: ${playerInCheck} | AICheck: false | PlayerCheckmate: ${playerCheckmate} | AICheckmate: false | FEN: ${chess.fen()}`);
+    
     res.json({
       fen: chess.fen(),
-      fenAfterPlayer,
-      playerMove,
       aiMove,
       aiThinkTime,
       model,
-      isGameOver: chess.isGameOver(),
-      isCheck: chess.isCheck(),
-      isCheckmate: chess.isCheckmate(),
+      playerInCheck,
+      playerCheckmate,
+      isGameOver,
       isDraw: chess.isDraw(),
       turn: chess.turn() === 'w' ? 'white' : 'black'
     });
   } catch (error) {
-    console.error('Copilot move error:', error);
+    console.error('AI move error:', error);
     res.status(500).json({ error: error.message });
   }
 });

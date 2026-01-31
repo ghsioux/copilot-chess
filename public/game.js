@@ -152,7 +152,7 @@ newGameBtn.addEventListener('click', () => {
 flipBoardBtn.addEventListener('click', flipBoard);
 resignBtn.addEventListener('click', () => {
   if (confirm('Are you sure you want to resign? 🏳️')) {
-    gameStatus.innerHTML = 'You resigned! 🏳️';
+    turnIndicator.textContent = 'You resigned! 🏳️';
     disableBoard();
   }
 });
@@ -275,7 +275,6 @@ async function startNewGame() {
     currentDifficulty.textContent = currentModelName;
     
     const colorName = playerColor === 'white' ? 'White' : 'Black';
-    gameStatus.textContent = '';
     moveHistory.innerHTML = '';
 
     // Render board immediately
@@ -314,7 +313,6 @@ async function applyImportedGame(data) {
   chessBoard.style.opacity = '1';
   currentModelName = data.model || currentModelName || selectedModel || 'IA';
   currentDifficulty.textContent = currentModelName;
-  gameStatus.textContent = '';
   moveHistory.innerHTML = '';
 
   // Rebuild move list display
@@ -357,11 +355,18 @@ async function applyImportedGame(data) {
   // If it's AI's turn after loading, immediately request its move
   const aiColor = data.aiColor || (playerColor === 'white' ? 'black' : 'white');
   if (data.turn && data.turn === aiColor) {
-    await requestAIMove();
+    await requestAIMove(data.aiInCheck, data.fen);
     return;
   }
 
-  updateStatus(data);
+  // If player is in check after load, show it
+  if (data.playerInCheck) {
+    const colorName = playerColor === 'white' ? 'White' : 'Black';
+    turnIndicator.textContent = `⚠️ Check! Your turn (${colorName})`;
+    highlightCheckedKing(data.fen);
+  } else {
+    updateStatus(data);
+  }
 
   // Start timing for player's next move
   turnStartTime = Date.now();
@@ -377,14 +382,24 @@ function rebuildMoveListFromSan(moves) {
   }
 }
 
-async function requestAIMove() {
+async function requestAIMove(aiInCheck = false, currentFen = null) {
   if (!gameId) return;
   if (isAnimating) return;
   if (isViewingHistory) return;
 
   isAnimating = true;
   document.querySelector('.copilot-logo')?.classList.add('thinking');
-  turnIndicator.innerHTML = '<svg class="copilot-icon" viewBox="0 0 512 416" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M181.33 266.143c0-11.497 9.32-20.818 20.818-20.818 11.498 0 20.819 9.321 20.819 20.818v38.373c0 11.497-9.321 20.818-20.819 20.818-11.497 0-20.818-9.32-20.818-20.818v-38.373zM308.807 245.325c-11.477 0-20.798 9.321-20.798 20.818v38.373c0 11.497 9.32 20.818 20.798 20.818 11.497 0 20.818-9.32 20.818-20.818v-38.373c0-11.497-9.32-20.818-20.818-20.818z"/><path d="M512.002 246.393v57.384c-.02 7.411-3.696 14.638-9.67 19.011C431.767 374.444 344.695 416 256 416c-98.138 0-196.379-56.542-246.33-93.21-5.975-4.374-9.65-11.6-9.671-19.012v-57.384a35.347 35.347 0 016.857-20.922l15.583-21.085c8.336-11.312 20.757-14.31 33.98-14.31 4.988-56.953 16.794-97.604 45.024-127.354C155.194 5.77 226.56 0 256 0c29.441 0 100.807 5.77 154.557 62.722 28.19 29.75 40.036 70.401 45.025 127.354 13.263 0 25.602 2.936 33.958 14.31l15.583 21.127c4.476 6.077 6.878 13.345 6.878 20.88zm-97.666-26.075c-.677-13.058-11.292-18.19-22.338-21.824-11.64 7.309-25.848 10.183-39.46 10.183-14.454 0-41.432-3.47-63.872-25.869-5.667-5.625-9.527-14.454-12.155-24.247a212.902 212.902 0 00-20.469-1.088c-6.098 0-13.099.349-20.551 1.088-2.628 9.793-6.509 18.622-12.155 24.247-22.4 22.4-49.418 25.87-63.872 25.87-13.612 0-27.86-2.855-39.501-10.184-11.005 3.613-21.558 8.828-22.277 21.824-1.17 24.555-1.272 49.11-1.375 73.645-.041 12.318-.082 24.658-.288 36.976.062 7.166 4.374 13.818 10.882 16.774 52.97 24.124 103.045 36.278 149.137 36.278 46.01 0 96.085-12.154 149.014-36.278 6.508-2.956 10.84-9.608 10.881-16.774.637-36.832.124-73.809-1.642-110.62h.041zM107.521 168.97c8.643 8.623 24.966 14.392 42.56 14.392 13.448 0 39.03-2.874 60.156-24.329 9.28-8.951 15.05-31.35 14.413-54.079-.657-18.231-5.769-33.28-13.448-39.665-8.315-7.371-27.203-10.574-48.33-8.644-22.399 2.238-41.267 9.588-50.875 19.833-20.798 22.728-16.323 80.317-4.476 92.492zm130.556-56.008c.637 3.51.965 7.35 1.273 11.517 0 2.875 0 5.77-.308 8.952 6.406-.636 11.847-.636 16.959-.636s10.553 0 16.959.636c-.329-3.182-.329-6.077-.329-8.952.329-4.167.657-8.007 1.294-11.517-6.735-.637-12.812-.965-17.924-.965s-11.21.328-17.924.965zm49.275-8.008c-.637 22.728 5.133 45.128 14.413 54.08 21.105 21.454 46.708 24.328 60.155 24.328 17.596 0 33.918-5.769 42.561-14.392 11.847-12.175 16.322-69.764-4.476-92.492-9.608-10.245-28.476-17.595-50.875-19.833-21.127-1.93-40.015 1.273-48.33 8.644-7.679 6.385-12.791 21.434-13.448 39.665z"/></svg><span class="thinking-text">is thinking...</span>';
+  
+  // Show "is sweating" if AI is in check, otherwise "is thinking"
+  if (aiInCheck) {
+    turnIndicator.innerHTML = '<svg class="copilot-icon" viewBox="0 0 512 416" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M181.33 266.143c0-11.497 9.32-20.818 20.818-20.818 11.498 0 20.819 9.321 20.819 20.818v38.373c0 11.497-9.321 20.818-20.819 20.818-11.497 0-20.818-9.32-20.818-20.818v-38.373zM308.807 245.325c-11.477 0-20.798 9.321-20.798 20.818v38.373c0 11.497 9.32 20.818 20.798 20.818 11.497 0 20.818-9.32 20.818-20.818v-38.373c0-11.497-9.32-20.818-20.818-20.818z"/><path d="M512.002 246.393v57.384c-.02 7.411-3.696 14.638-9.67 19.011C431.767 374.444 344.695 416 256 416c-98.138 0-196.379-56.542-246.33-93.21-5.975-4.374-9.65-11.6-9.671-19.012v-57.384a35.347 35.347 0 016.857-20.922l15.583-21.085c8.336-11.312 20.757-14.31 33.98-14.31 4.988-56.953 16.794-97.604 45.024-127.354C155.194 5.77 226.56 0 256 0c29.441 0 100.807 5.77 154.557 62.722 28.19 29.75 40.036 70.401 45.025 127.354 13.263 0 25.602 2.936 33.958 14.31l15.583 21.127c4.476 6.077 6.878 13.345 6.878 20.88zm-97.666-26.075c-.677-13.058-11.292-18.19-22.338-21.824-11.64 7.309-25.848 10.183-39.46 10.183-14.454 0-41.432-3.47-63.872-25.869-5.667-5.625-9.527-14.454-12.155-24.247a212.902 212.902 0 00-20.469-1.088c-6.098 0-13.099.349-20.551 1.088-2.628 9.793-6.509 18.622-12.155 24.247-22.4 22.4-49.418 25.87-63.872 25.87-13.612 0-27.86-2.855-39.501-10.184-11.005 3.613-21.558 8.828-22.277 21.824-1.17 24.555-1.272 49.11-1.375 73.645-.041 12.318-.082 24.658-.288 36.976.062 7.166 4.374 13.818 10.882 16.774 52.97 24.124 103.045 36.278 149.137 36.278 46.01 0 96.085-12.154 149.014-36.278 6.508-2.956 10.84-9.608 10.881-16.774.637-36.832.124-73.809-1.642-110.62h.041zM107.521 168.97c8.643 8.623 24.966 14.392 42.56 14.392 13.448 0 39.03-2.874 60.156-24.329 9.28-8.951 15.05-31.35 14.413-54.079-.657-18.231-5.769-33.28-13.448-39.665-8.315-7.371-27.203-10.574-48.33-8.644-22.399 2.238-41.267 9.588-50.875 19.833-20.798 22.728-16.323 80.317-4.476 92.492zm130.556-56.008c.637 3.51.965 7.35 1.273 11.517 0 2.875 0 5.77-.308 8.952 6.406-.636 11.847-.636 16.959-.636s10.553 0 16.959.636c-.329-3.182-.329-6.077-.329-8.952.329-4.167.657-8.007 1.294-11.517-6.735-.637-12.812-.965-17.924-.965s-11.21.328-17.924.965zm49.275-8.008c-.637 22.728 5.133 45.128 14.413 54.08 21.105 21.454 46.708 24.328 60.155 24.328 17.596 0 33.918-5.769 42.561-14.392 11.847-12.175 16.322-69.764-4.476-92.492-9.608-10.245-28.476-17.595-50.875-19.833-21.127-1.93-40.015 1.273-48.33 8.644-7.679 6.385-12.791 21.434-13.448 39.665z"/></svg><span class="thinking-text">is sweating...</span>';
+    // Highlight the AI king in check
+    if (currentFen) {
+      highlightCheckedKing(currentFen);
+    }
+  } else {
+    turnIndicator.innerHTML = '<svg class="copilot-icon" viewBox="0 0 512 416" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M181.33 266.143c0-11.497 9.32-20.818 20.818-20.818 11.498 0 20.819 9.321 20.819 20.818v38.373c0 11.497-9.321 20.818-20.819 20.818-11.497 0-20.818-9.32-20.818-20.818v-38.373zM308.807 245.325c-11.477 0-20.798 9.321-20.798 20.818v38.373c0 11.497 9.32 20.818 20.798 20.818 11.497 0 20.818-9.32 20.818-20.818v-38.373c0-11.497-9.32-20.818-20.818-20.818z"/><path d="M512.002 246.393v57.384c-.02 7.411-3.696 14.638-9.67 19.011C431.767 374.444 344.695 416 256 416c-98.138 0-196.379-56.542-246.33-93.21-5.975-4.374-9.65-11.6-9.671-19.012v-57.384a35.347 35.347 0 016.857-20.922l15.583-21.085c8.336-11.312 20.757-14.31 33.98-14.31 4.988-56.953 16.794-97.604 45.024-127.354C155.194 5.77 226.56 0 256 0c29.441 0 100.807 5.77 154.557 62.722 28.19 29.75 40.036 70.401 45.025 127.354 13.263 0 25.602 2.936 33.958 14.31l15.583 21.127c4.476 6.077 6.878 13.345 6.878 20.88zm-97.666-26.075c-.677-13.058-11.292-18.19-22.338-21.824-11.64 7.309-25.848 10.183-39.46 10.183-14.454 0-41.432-3.47-63.872-25.869-5.667-5.625-9.527-14.454-12.155-24.247a212.902 212.902 0 00-20.469-1.088c-6.098 0-13.099.349-20.551 1.088-2.628 9.793-6.509 18.622-12.155 24.247-22.4 22.4-49.418 25.87-63.872 25.87-13.612 0-27.86-2.855-39.501-10.184-11.005 3.613-21.558 8.828-22.277 21.824-1.17 24.555-1.272 49.11-1.375 73.645-.041 12.318-.082 24.658-.288 36.976.062 7.166 4.374 13.818 10.882 16.774 52.97 24.124 103.045 36.278 149.137 36.278 46.01 0 96.085-12.154 149.014-36.278 6.508-2.956 10.84-9.608 10.881-16.774.637-36.832.124-73.809-1.642-110.62h.041zM107.521 168.97c8.643 8.623 24.966 14.392 42.56 14.392 13.448 0 39.03-2.874 60.156-24.329 9.28-8.951 15.05-31.35 14.413-54.079-.657-18.231-5.769-33.28-13.448-39.665-8.315-7.371-27.203-10.574-48.33-8.644-22.399 2.238-41.267 9.588-50.875 19.833-20.798 22.728-16.323 80.317-4.476 92.492zm130.556-56.008c.637 3.51.965 7.35 1.273 11.517 0 2.875 0 5.77-.308 8.952 6.406-.636 11.847-.636 16.959-.636s10.553 0 16.959.636c-.329-3.182-.329-6.077-.329-8.952.329-4.167.657-8.007 1.294-11.517-6.735-.637-12.812-.965-17.924-.965s-11.21.328-17.924.965zm49.275-8.008c-.637 22.728 5.133 45.128 14.413 54.08 21.105 21.454 46.708 24.328 60.155 24.328 17.596 0 33.918-5.769 42.561-14.392 11.847-12.175 16.322-69.764-4.476-92.492-9.608-10.245-28.476-17.595-50.875-19.833-21.127-1.93-40.015 1.273-48.33 8.644-7.679 6.385-12.791 21.434-13.448 39.665z"/></svg><span class="thinking-text">is thinking...</span>';
+  }
 
   try {
     const response = await fetch(`/api/game/${gameId}/ai-move`, {
@@ -406,7 +421,7 @@ async function requestAIMove() {
     renderBoard(data.fen);
 
     if (data.aiMove?.from && data.aiMove?.to) {
-      positionHistory.push({ fen: data.fen, lastMove });
+      positionHistory.push({ fen: data.fen, lastMove, isCheck: data.playerInCheck });
       const aiTime = data.aiThinkTime ? formatMoveTime(data.aiThinkTime) : '';
       addMoveToHistory(data.aiMove.san, aiTime, data.aiMove.color);
     }
@@ -416,7 +431,7 @@ async function requestAIMove() {
     updateStatus(data);
   } catch (err) {
     console.error('AI move failed:', err);
-    gameStatus.textContent = '❌ AI failed to move';
+    turnIndicator.textContent = '❌ AI failed to move';
   }
 
   document.querySelector('.copilot-logo')?.classList.remove('thinking');
@@ -773,6 +788,7 @@ function animateMove(from, to, promotedPiece = null) {
 async function makeMove(from, to, promotion = null) {
   isAnimating = true;
   deselectSquare();
+  clearCheckHighlight(); // Clear check highlight when player starts moving
 
   // Capture player time BEFORE animation and server call
   const playerTime = turnStartTime ? formatMoveTime(Date.now() - turnStartTime) : '';
@@ -799,25 +815,22 @@ async function makeMove(from, to, promotion = null) {
   // On utilise from-to comme placeholder, le SAN sera mis à jour après
   addMoveToHistory(`${from}-${to}`, playerTime, playerMoveColor);
 
-  // 3. Then call the server (Copilot SDK)
-  document.querySelector('.copilot-logo')?.classList.add('thinking');
-  turnIndicator.innerHTML = '<svg class="copilot-icon" viewBox="0 0 512 416" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M181.33 266.143c0-11.497 9.32-20.818 20.818-20.818 11.498 0 20.819 9.321 20.819 20.818v38.373c0 11.497-9.321 20.818-20.819 20.818-11.497 0-20.818-9.32-20.818-20.818v-38.373zM308.807 245.325c-11.477 0-20.798 9.321-20.798 20.818v38.373c0 11.497 9.32 20.818 20.798 20.818 11.497 0 20.818-9.32 20.818-20.818v-38.373c0-11.497-9.32-20.818-20.818-20.818z"/><path d="M512.002 246.393v57.384c-.02 7.411-3.696 14.638-9.67 19.011C431.767 374.444 344.695 416 256 416c-98.138 0-196.379-56.542-246.33-93.21-5.975-4.374-9.65-11.6-9.671-19.012v-57.384a35.347 35.347 0 016.857-20.922l15.583-21.085c8.336-11.312 20.757-14.31 33.98-14.31 4.988-56.953 16.794-97.604 45.024-127.354C155.194 5.77 226.56 0 256 0c29.441 0 100.807 5.77 154.557 62.722 28.19 29.75 40.036 70.401 45.025 127.354 13.263 0 25.602 2.936 33.958 14.31l15.583 21.127c4.476 6.077 6.878 13.345 6.878 20.88zm-97.666-26.075c-.677-13.058-11.292-18.19-22.338-21.824-11.64 7.309-25.848 10.183-39.46 10.183-14.454 0-41.432-3.47-63.872-25.869-5.667-5.625-9.527-14.454-12.155-24.247a212.902 212.902 0 00-20.469-1.088c-6.098 0-13.099.349-20.551 1.088-2.628 9.793-6.509 18.622-12.155 24.247-22.4 22.4-49.418 25.87-63.872 25.87-13.612 0-27.86-2.855-39.501-10.184-11.005 3.613-21.558 8.828-22.277 21.824-1.17 24.555-1.272 49.11-1.375 73.645-.041 12.318-.082 24.658-.288 36.976.062 7.166 4.374 13.818 10.882 16.774 52.97 24.124 103.045 36.278 149.137 36.278 46.01 0 96.085-12.154 149.014-36.278 6.508-2.956 10.84-9.608 10.881-16.774.637-36.832.124-73.809-1.642-110.62h.041zM107.521 168.97c8.643 8.623 24.966 14.392 42.56 14.392 13.448 0 39.03-2.874 60.156-24.329 9.28-8.951 15.05-31.35 14.413-54.079-.657-18.231-5.769-33.28-13.448-39.665-8.315-7.371-27.203-10.574-48.33-8.644-22.399 2.238-41.267 9.588-50.875 19.833-20.798 22.728-16.323 80.317-4.476 92.492zm130.556-56.008c.637 3.51.965 7.35 1.273 11.517 0 2.875 0 5.77-.308 8.952 6.406-.636 11.847-.636 16.959-.636s10.553 0 16.959.636c-.329-3.182-.329-6.077-.329-8.952.329-4.167.657-8.007 1.294-11.517-6.735-.637-12.812-.965-17.924-.965s-11.21.328-17.924.965zm49.275-8.008c-.637 22.728 5.133 45.128 14.413 54.08 21.105 21.454 46.708 24.328 60.155 24.328 17.596 0 33.918-5.769 42.561-14.392 11.847-12.175 16.322-69.764-4.476-92.492-9.608-10.245-28.476-17.595-50.875-19.833-21.127-1.93-40.015 1.273-48.33 8.644-7.679 6.385-12.791 21.434-13.448 39.665z"/></svg><span class="thinking-text">is thinking...</span>';
-  
-  // Build move string - include promotion piece if provided
+  // 3. Send player move to server (returns immediately)
   const moveString = promotion ? from + to + promotion : from + to;
   
   try {
-    const response = await fetch(`/api/game/${gameId}/move`, {
+    // Step 1: Send player move
+    const playerResponse = await fetch(`/api/game/${gameId}/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ move: moveString })
     });
 
-    const data = await response.json();
+    const playerData = await playerResponse.json();
     
-    if (data.error) {
-      alert(data.error);
-      renderBoard(data.fen || await getCurrentFen());
+    if (playerData.error) {
+      alert(playerData.error);
+      renderBoard(playerData.fen || await getCurrentFen());
       const colorName = playerColor === 'white' ? 'White' : 'Black';
       document.querySelector('.copilot-logo')?.classList.remove('thinking');
       turnIndicator.textContent = `Your turn (${colorName})`;
@@ -825,61 +838,96 @@ async function makeMove(from, to, promotion = null) {
       return;
     }
 
-    // 4. Animate AI move if present
-    if (data.aiMove?.from && data.aiMove?.to) {
+    // Update move history with real SAN
+    const lastEntry = moveHistory.querySelector('div:last-child');
+    if (lastEntry && playerData.playerMove?.san) {
+      lastEntry.innerHTML = lastEntry.innerHTML.replace(`${from}-${to}`, playerData.playerMove.san);
+    }
+
+    // Save position to history after player move
+    positionHistory.push({ fen: playerData.fen, lastMove: { from, to }, isCheck: playerData.aiInCheck });
+
+    console.log('🎮 CLIENT: Player move response - aiInCheck:', playerData.aiInCheck, 'aiCheckmate:', playerData.aiCheckmate);
+
+    // Check if game is over after player move
+    if (playerData.isGameOver) {
+      renderBoard(playerData.fen);
+      if (playerData.aiCheckmate) {
+        turnIndicator.textContent = '🎉 Checkmate! You win! 🎉';
+        disableBoard();
+      } else if (playerData.isDraw) {
+        turnIndicator.textContent = '🤝 Draw! Well played!';
+        disableBoard();
+      }
+      isAnimating = false;
+      return;
+    }
+
+    // Show check status BEFORE requesting AI move
+    if (playerData.aiInCheck) {
+      console.log('✅ CLIENT: Copilot is in check!');
+      turnIndicator.innerHTML = '<svg class="copilot-icon" viewBox="0 0 512 416" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M181.33 266.143c0-11.497 9.32-20.818 20.818-20.818 11.498 0 20.819 9.321 20.819 20.818v38.373c0 11.497-9.321 20.818-20.819 20.818-11.497 0-20.818-9.32-20.818-20.818v-38.373zM308.807 245.325c-11.477 0-20.798 9.321-20.798 20.818v38.373c0 11.497 9.32 20.818 20.798 20.818 11.497 0 20.818-9.32 20.818-20.818v-38.373c0-11.497-9.32-20.818-20.818-20.818z"/><path d="M512.002 246.393v57.384c-.02 7.411-3.696 14.638-9.67 19.011C431.767 374.444 344.695 416 256 416c-98.138 0-196.379-56.542-246.33-93.21-5.975-4.374-9.65-11.6-9.671-19.012v-57.384a35.347 35.347 0 016.857-20.922l15.583-21.085c8.336-11.312 20.757-14.31 33.98-14.31 4.988-56.953 16.794-97.604 45.024-127.354C155.194 5.77 226.56 0 256 0c29.441 0 100.807 5.77 154.557 62.722 28.19 29.75 40.036 70.401 45.025 127.354 13.263 0 25.602 2.936 33.958 14.31l15.583 21.127c4.476 6.077 6.878 13.345 6.878 20.88zm-97.666-26.075c-.677-13.058-11.292-18.19-22.338-21.824-11.64 7.309-25.848 10.183-39.46 10.183-14.454 0-41.432-3.47-63.872-25.869-5.667-5.625-9.527-14.454-12.155-24.247a212.902 212.902 0 00-20.469-1.088c-6.098 0-13.099.349-20.551 1.088-2.628 9.793-6.509 18.622-12.155 24.247-22.4 22.4-49.418 25.87-63.872 25.87-13.612 0-27.86-2.855-39.501-10.184-11.005 3.613-21.558 8.828-22.277 21.824-1.17 24.555-1.272 49.11-1.375 73.645-.041 12.318-.082 24.658-.288 36.976.062 7.166 4.374 13.818 10.882 16.774 52.97 24.124 103.045 36.278 149.137 36.278 46.01 0 96.085-12.154 149.014-36.278 6.508-2.956 10.84-9.608 10.881-16.774.637-36.832.124-73.809-1.642-110.62h.041zM107.521 168.97c8.643 8.623 24.966 14.392 42.56 14.392 13.448 0 39.03-2.874 60.156-24.329 9.28-8.951 15.05-31.35 14.413-54.079-.657-18.231-5.769-33.28-13.448-39.665-8.315-7.371-27.203-10.574-48.33-8.644-22.399 2.238-41.267 9.588-50.875 19.833-20.798 22.728-16.323 80.317-4.476 92.492zm130.556-56.008c.637 3.51.965 7.35 1.273 11.517 0 2.875 0 5.77-.308 8.952 6.406-.636 11.847-.636 16.959-.636s10.553 0 16.959.636c-.329-3.182-.329-6.077-.329-8.952.329-4.167.657-8.007 1.294-11.517-6.735-.637-12.812-.965-17.924-.965s-11.21.328-17.924.965zm49.275-8.008c-.637 22.728 5.133 45.128 14.413 54.08 21.105 21.454 46.708 24.328 60.155 24.328 17.596 0 33.918-5.769 42.561-14.392 11.847-12.175 16.322-69.764-4.476-92.492-9.608-10.245-28.476-17.595-50.875-19.833-21.127-1.93-40.015 1.273-48.33 8.644-7.679 6.385-12.791 21.434-13.448 39.665z"/></svg><span class="thinking-text">is sweating...</span>';
+      document.querySelector('.copilot-logo')?.classList.add('thinking');
+      // Highlight the AI king in check
+      highlightCheckedKing(playerData.fen);
+    } else {
+      document.querySelector('.copilot-logo')?.classList.add('thinking');
+      turnIndicator.innerHTML = '<svg class="copilot-icon" viewBox="0 0 512 416" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M181.33 266.143c0-11.497 9.32-20.818 20.818-20.818 11.498 0 20.819 9.321 20.819 20.818v38.373c0 11.497-9.321 20.818-20.819 20.818-11.497 0-20.818-9.32-20.818-20.818v-38.373zM308.807 245.325c-11.477 0-20.798 9.321-20.798 20.818v38.373c0 11.497 9.32 20.818 20.798 20.818 11.497 0 20.818-9.32 20.818-20.818v-38.373c0-11.497-9.32-20.818-20.818-20.818z"/><path d="M512.002 246.393v57.384c-.02 7.411-3.696 14.638-9.67 19.011C431.767 374.444 344.695 416 256 416c-98.138 0-196.379-56.542-246.33-93.21-5.975-4.374-9.65-11.6-9.671-19.012v-57.384a35.347 35.347 0 016.857-20.922l15.583-21.085c8.336-11.312 20.757-14.31 33.98-14.31 4.988-56.953 16.794-97.604 45.024-127.354C155.194 5.77 226.56 0 256 0c29.441 0 100.807 5.77 154.557 62.722 28.19 29.75 40.036 70.401 45.025 127.354 13.263 0 25.602 2.936 33.958 14.31l15.583 21.127c4.476 6.077 6.878 13.345 6.878 20.88zm-97.666-26.075c-.677-13.058-11.292-18.19-22.338-21.824-11.64 7.309-25.848 10.183-39.46 10.183-14.454 0-41.432-3.47-63.872-25.869-5.667-5.625-9.527-14.454-12.155-24.247a212.902 212.902 0 00-20.469-1.088c-6.098 0-13.099.349-20.551 1.088-2.628 9.793-6.509 18.622-12.155 24.247-22.4 22.4-49.418 25.87-63.872 25.87-13.612 0-27.86-2.855-39.501-10.184-11.005 3.613-21.558 8.828-22.277 21.824-1.17 24.555-1.272 49.11-1.375 73.645-.041 12.318-.082 24.658-.288 36.976.062 7.166 4.374 13.818 10.882 16.774 52.97 24.124 103.045 36.278 149.137 36.278 46.01 0 96.085-12.154 149.014-36.278 6.508-2.956 10.84-9.608 10.881-16.774.637-36.832.124-73.809-1.642-110.62h.041zM107.521 168.97c8.643 8.623 24.966 14.392 42.56 14.392 13.448 0 39.03-2.874 60.156-24.329 9.28-8.951 15.05-31.35 14.413-54.079-.657-18.231-5.769-33.28-13.448-39.665-8.315-7.371-27.203-10.574-48.33-8.644-22.399 2.238-41.267 9.588-50.875 19.833-20.798 22.728-16.323 80.317-4.476 92.492zm130.556-56.008c.637 3.51.965 7.35 1.273 11.517 0 2.875 0 5.77-.308 8.952 6.406-.636 11.847-.636 16.959-.636s10.553 0 16.959.636c-.329-3.182-.329-6.077-.329-8.952.329-4.167.657-8.007 1.294-11.517-6.735-.637-12.812-.965-17.924-.965s-11.21.328-17.924.965zm49.275-8.008c-.637 22.728 5.133 45.128 14.413 54.08 21.105 21.454 46.708 24.328 60.155 24.328 17.596 0 33.918-5.769 42.561-14.392 11.847-12.175 16.322-69.764-4.476-92.492-9.608-10.245-28.476-17.595-50.875-19.833-21.127-1.93-40.015 1.273-48.33 8.644-7.679 6.385-12.791 21.434-13.448 39.665z"/></svg><span class="thinking-text">is thinking...</span>';
+    }
+
+    // Step 2: Request AI move
+    const aiResponse = await fetch(`/api/game/${gameId}/ai-move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const aiData = await aiResponse.json();
+    
+    if (aiData.error) {
+      console.error('AI move error:', aiData.error);
+      alert('AI failed to make a move: ' + aiData.error);
+      isAnimating = false;
+      return;
+    }
+
+    console.log('🎮 CLIENT: AI move response - playerInCheck:', aiData.playerInCheck, 'playerCheckmate:', aiData.playerCheckmate);
+
+    // Animate AI move
+    if (aiData.aiMove?.from && aiData.aiMove?.to) {
       // Check if AI is capturing before animation
-      const aiTargetSquare = document.querySelector(`[data-square="${data.aiMove.to}"]`);
+      const aiTargetSquare = document.querySelector(`[data-square="${aiData.aiMove.to}"]`);
       const aiCapturedPieceCode = aiTargetSquare?.dataset?.piece;
       if (aiCapturedPieceCode) {
-        // AI captured a piece - update immediately!
         addCapturedPiece(aiCapturedPieceCode, false);
       }
       
-      await animateMove(data.aiMove.from, data.aiMove.to);
-      // Update to AI's move and re-render with new highlights
-      lastMove = { from: data.aiMove.from, to: data.aiMove.to };
+      await animateMove(aiData.aiMove.from, aiData.aiMove.to);
+      lastMove = { from: aiData.aiMove.from, to: aiData.aiMove.to };
     }
 
-    // 5. Render final board state with correct highlights
-    renderBoard(data.fen);
+    // Render final board state
+    renderBoard(aiData.fen);
 
-    // Save position to history after player move
-    positionHistory.push({ fen: data.fenAfterPlayer || data.fen, lastMove: { from, to } });
-    
     // Save position to history after AI move
-    if (data.aiMove?.from && data.aiMove?.to) {
-      positionHistory.push({ fen: data.fen, lastMove: { from: data.aiMove.from, to: data.aiMove.to } });
+    if (aiData.aiMove?.from && aiData.aiMove?.to) {
+      positionHistory.push({ fen: aiData.fen, lastMove: { from: aiData.aiMove.from, to: aiData.aiMove.to }, isCheck: aiData.playerInCheck });
     }
     
     // Reset history navigation
     historyIndex = -1;
     isViewingHistory = false;
 
-    // Update move history: replace the temporary player move with the real SAN
-    const lastEntry = moveHistory.querySelector('div:last-child');
-    if (lastEntry && data.playerMove?.san) {
-      // Replace the temporary "from-to" with the real SAN
-      const playerMoveColor = playerColor === 'white' ? 'w' : 'b';
-      if (playerMoveColor === 'w') {
-        // Player is white: update "N. from-to (time) - ..." to "N. SAN (time) - ..."
-        lastEntry.innerHTML = lastEntry.innerHTML.replace(`${from}-${to}`, data.playerMove.san);
-      } else {
-        // Player is black: update "- from-to (time)" to "- SAN (time)"
-        lastEntry.innerHTML = lastEntry.innerHTML.replace(`${from}-${to}`, data.playerMove.san);
-      }
-    }
-    
-    // Add AI move if present
-    if (data.aiMove?.san) {
-      const aiTime = data.aiThinkTime ? formatMoveTime(data.aiThinkTime) : '';
+    // Add AI move to history
+    if (aiData.aiMove?.san) {
+      const aiTime = aiData.aiThinkTime ? formatMoveTime(aiData.aiThinkTime) : '';
       const aiMoveColor = playerColor === 'white' ? 'b' : 'w';
-      addMoveToHistory(data.aiMove.san, aiTime, aiMoveColor);
+      addMoveToHistory(aiData.aiMove.san, aiTime, aiMoveColor);
     }
     
     // Reset timer for next turn
     turnStartTime = Date.now();
 
-    updateStatus(data);
+    updateStatus(aiData);
   } catch (error) {
     console.error('Error making move:', error);
     alert('Failed to make move. Please try again.');
@@ -897,27 +945,72 @@ async function getCurrentFen() {
   return data.fen;
 }
 
-// Update game status
-function updateStatus(data) {
-  document.querySelector('.copilot-logo')?.classList.remove('thinking');
-  const colorName = playerColor === 'white' ? 'White' : 'Black';
-  const playerTurnName = playerColor;
-  const sideToMove = data.turn; // 'white' | 'black' (when provided)
-  const playerIsCheckmated = sideToMove ? sideToMove === playerTurnName : false;
+// Find and highlight the checked king's square
+function highlightCheckedKing(fen) {
+  console.log('👑 highlightCheckedKing called with FEN:', fen);
+  // Clear any existing check highlights
+  document.querySelectorAll('.square.in-check').forEach(sq => sq.classList.remove('in-check'));
   
-  if (data.isCheckmate) {
-    gameStatus.innerHTML = playerIsCheckmated ? '😢 Checkmate! AI wins! 😢' : '🎉 Checkmate! You win! 🎉';
-    turnIndicator.textContent = 'Game Over';
+  // Parse FEN to find the king that's in check
+  // The side to move is the one in check (since we just made a move)
+  const fenParts = fen.split(' ');
+  const board = fenParts[0];
+  const sideToMove = fenParts[1]; // 'w' or 'b'
+  const kingToFind = sideToMove === 'w' ? 'K' : 'k';
+  console.log('👑 Looking for king:', kingToFind, 'sideToMove:', sideToMove);
+  
+  // Parse the board to find king position
+  const rows = board.split('/');
+  for (let rank = 0; rank < 8; rank++) {
+    let file = 0;
+    for (const char of rows[rank]) {
+      if (char >= '1' && char <= '8') {
+        file += parseInt(char);
+      } else {
+        if (char === kingToFind) {
+          const squareName = String.fromCharCode(97 + file) + (8 - rank);
+          const squareEl = document.querySelector(`[data-square="${squareName}"]`);
+          console.log('👑 Found king at:', squareName, 'element:', squareEl);
+          if (squareEl) {
+            squareEl.classList.add('in-check');
+            console.log('👑 Added in-check class to:', squareName);
+          }
+          return;
+        }
+        file++;
+      }
+    }
+  }
+  console.log('👑 King not found!');
+}
+
+// Clear check highlight
+function clearCheckHighlight() {
+  document.querySelectorAll('.square.in-check').forEach(sq => sq.classList.remove('in-check'));
+}
+
+// Update game status (called after AI move)
+function updateStatus(data) {
+  console.log('🎮 CLIENT updateStatus called - playerInCheck:', data.playerInCheck, 'playerCheckmate:', data.playerCheckmate, 'isDraw:', data.isDraw);
+  document.querySelector('.copilot-logo')?.classList.remove('thinking');
+  clearCheckHighlight();
+  const colorName = playerColor === 'white' ? 'White' : 'Black';
+  
+  if (data.playerCheckmate) {
+    console.log('♟️ CLIENT: CHECKMATE - Player lost!');
+    turnIndicator.textContent = '😢 Checkmate! AI wins!';
+    highlightCheckedKing(data.fen);
     disableBoard();
   } else if (data.isDraw) {
-    gameStatus.innerHTML = '🤝 Draw! Well played!';
-    turnIndicator.textContent = 'Game Over';
+    turnIndicator.textContent = '🤝 Draw! Well played!';
     disableBoard();
-  } else if (data.isCheck) {
-    gameStatus.innerHTML = '⚠️ Check! ⚠️';
-    turnIndicator.textContent = `Your turn (${colorName})`;
+  } else if (data.playerInCheck) {
+    // AI put the player in check
+    console.log('⚠️ CLIENT: AI put player in check!');
+    turnIndicator.textContent = `⚠️ Check! Your turn (${colorName})`;
+    highlightCheckedKing(data.fen);
   } else {
-    gameStatus.innerHTML = '';
+    // Normal state
     turnIndicator.textContent = `Your turn (${colorName})`;
   }
 }
@@ -953,6 +1046,12 @@ function navigateHistory(direction) {
   
   // Render the board at this position
   renderBoard(position.fen);
+  
+  // Highlight checked king if there's a check at this position
+  clearCheckHighlight();
+  if (position.isCheck) {
+    highlightCheckedKing(position.fen);
+  }
   
   // Update UI to show we're viewing history
   if (isViewingHistory) {
