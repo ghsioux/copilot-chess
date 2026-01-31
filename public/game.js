@@ -39,6 +39,9 @@ let currentModelName = null; // Store the current AI model name
 // Pending promotion
 let pendingPromotion = null; // { from, to } when waiting for player to choose promotion piece
 
+// Game over state (checkmate, stalemate, draw, or resignation)
+let isGameOver = false;
+
 // Abort current game session - stops animations, resets state, invalidates pending async operations
 function abortCurrentGame() {
   // Increment session token to invalidate any pending async operations
@@ -312,6 +315,14 @@ async function startNewGame() {
     positionHistory = [{ fen: data.fen, lastMove: null }];
     historyIndex = -1;
     isViewingHistory = false;
+    
+    // Reset game over state and re-enable resign button
+    isGameOver = false;
+    if (resignBtn) {
+      resignBtn.disabled = false;
+      resignBtn.style.opacity = '';
+      resignBtn.style.cursor = '';
+    }
 
     gameSetup.style.display = 'none';
     gameContainer.style.display = 'flex';
@@ -355,6 +366,15 @@ async function applyImportedGame(data) {
   gameContainer.style.display = 'flex';
   chessBoard.style.pointerEvents = 'auto';
   chessBoard.style.opacity = '1';
+  
+  // Reset game over state and re-enable resign button
+  isGameOver = false;
+  if (resignBtn) {
+    resignBtn.disabled = false;
+    resignBtn.style.opacity = '';
+    resignBtn.style.cursor = '';
+  }
+  
   currentModelName = data.model || currentModelName || selectedModel || 'IA';
   currentDifficulty.textContent = currentModelName;
   moveHistory.innerHTML = '';
@@ -1116,10 +1136,17 @@ function updateStatus(data) {
   }
 }
 
-// Disable board interaction
+// Disable board interaction (game over)
 function disableBoard() {
+  isGameOver = true;
   chessBoard.style.pointerEvents = 'none';
   chessBoard.style.opacity = '0.6';
+  // Disable resign button when game is over
+  if (resignBtn) {
+    resignBtn.disabled = true;
+    resignBtn.style.opacity = '0.5';
+    resignBtn.style.cursor = 'not-allowed';
+  }
 }
 
 // Navigate through move history
@@ -1158,11 +1185,13 @@ function navigateHistory(direction) {
   if (isViewingHistory) {
     turnIndicator.textContent = `📜 Viewing move ${historyIndex}/${positionHistory.length - 1} (← →)`;
     chessBoard.style.pointerEvents = 'none';
-  } else {
+  } else if (!isGameOver) {
+    // Only re-enable board if game is not over
     const colorName = playerColor === 'white' ? 'White' : 'Black';
     turnIndicator.textContent = `Your turn (${colorName})`;
     chessBoard.style.pointerEvents = 'auto';
   }
+  // If game is over, keep board disabled but don't change turn indicator
 }
 
 // Format move time in a human-readable way
