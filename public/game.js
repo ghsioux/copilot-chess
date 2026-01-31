@@ -110,9 +110,34 @@ const loadGameBtnSetup = document.getElementById('loadGameBtnSetup');
 const loadGameFileInput = document.getElementById('loadGameFileInput');
 const gameStatus = document.getElementById('gameStatus');
 const turnIndicator = document.getElementById('turnIndicator');
+const mobileTurnIndicatorEl = document.getElementById('mobileTurnIndicator');
 const currentDifficulty = document.getElementById('currentDifficulty');
 const moveHistory = document.getElementById('moveHistory');
 const modelSelect = document.getElementById('modelSelect');
+
+// Sync mobile turn indicator with desktop using MutationObserver
+if (turnIndicator && mobileTurnIndicatorEl) {
+  const syncMobileTurnIndicator = () => {
+    mobileTurnIndicatorEl.innerHTML = turnIndicator.innerHTML;
+  };
+  const observer = new MutationObserver(syncMobileTurnIndicator);
+  observer.observe(turnIndicator, { childList: true, characterData: true, subtree: true });
+}
+
+// Sync mobile Copilot logo "thinking" state with desktop logo
+const desktopCopilotLogo = document.querySelector('.copilot-logo');
+const mobileCopilotLogoEl = document.getElementById('mobileCopilotLogo');
+if (desktopCopilotLogo && mobileCopilotLogoEl) {
+  const syncMobileCopilotThinking = () => {
+    if (desktopCopilotLogo.classList.contains('thinking')) {
+      mobileCopilotLogoEl.classList.add('thinking');
+    } else {
+      mobileCopilotLogoEl.classList.remove('thinking');
+    }
+  };
+  const logoObserver = new MutationObserver(syncMobileCopilotThinking);
+  logoObserver.observe(desktopCopilotLogo, { attributes: true, attributeFilter: ['class'] });
+}
 
 // Custom dropdown elements
 const modelDropdown = document.getElementById('modelDropdown');
@@ -197,6 +222,64 @@ resignBtn.addEventListener('click', () => {
     abortCurrentGame();
     turnIndicator.textContent = 'You resigned! 🏳️';
     disableBoard();
+  }
+});
+
+// Mobile button event listeners
+const mobileNewGameBtn = document.getElementById('mobileNewGameBtn');
+const mobileLoadGameBtn = document.getElementById('mobileLoadGameBtn');
+const mobileSaveGameBtn = document.getElementById('mobileSaveGameBtn');
+const mobileFlipBoardBtn = document.getElementById('mobileFlipBoardBtn');
+const mobileResignBtn = document.getElementById('mobileResignBtn');
+const mobilePrevMoveBtn = document.getElementById('mobilePrevMoveBtn');
+const mobileNextMoveBtn = document.getElementById('mobileNextMoveBtn');
+const mobileCopilotLogo = document.getElementById('mobileCopilotLogo');
+
+mobileNewGameBtn?.addEventListener('click', () => {
+  abortCurrentGame();
+  gameContainer.style.display = 'none';
+  gameSetup.style.display = 'flex';
+});
+mobileFlipBoardBtn?.addEventListener('click', flipBoard);
+mobileResignBtn?.addEventListener('click', () => {
+  if (confirm('Are you sure you want to resign? 🏳️')) {
+    abortCurrentGame();
+    turnIndicator.textContent = 'You resigned! 🏳️';
+    disableBoard();
+  }
+});
+mobileLoadGameBtn?.addEventListener('click', () => {
+  loadGameFileInput?.click();
+});
+mobilePrevMoveBtn?.addEventListener('click', () => {
+  navigateHistory('back');
+});
+mobileNextMoveBtn?.addEventListener('click', () => {
+  navigateHistory('forward');
+});
+mobileSaveGameBtn?.addEventListener('click', async () => {
+  if (!gameId) {
+    alert('No active game to save.');
+    return;
+  }
+  try {
+    const response = await fetch(`/api/game/${gameId}/export`);
+    const data = await response.json();
+    if (!response.ok || data.error) throw new Error(data.error || 'Export failed');
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    a.download = `copilot-chess-save-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Save failed:', err);
+    alert(`Save failed: ${err.message || err}`);
   }
 });
 
@@ -1240,6 +1323,12 @@ function updateCapturedPiecesDisplay() {
   const playerScoreEl = document.getElementById('playerMaterialScore');
   const aiScoreEl = document.getElementById('aiMaterialScore');
   
+  // Mobile elements
+  const mobilePlayerCapturedEl = document.getElementById('mobilePlayerCaptured');
+  const mobileAiCapturedEl = document.getElementById('mobileAiCaptured');
+  const mobilePlayerScoreEl = document.getElementById('mobilePlayerMaterialScore');
+  const mobileAiScoreEl = document.getElementById('mobileAiMaterialScore');
+  
   if (!playerCapturedEl || !aiCapturedEl) return;
   
   const playerScore = calculateMaterialScore(capturedByPlayer);
@@ -1251,18 +1340,26 @@ function updateCapturedPiecesDisplay() {
   const sortedAICaptures = sortCapturedPieces(capturedByAI);
   
   // Player captured pieces (these are opponent's pieces, so show them as black if player is white)
-  playerCapturedEl.innerHTML = sortedPlayerCaptures.map(p => {
+  const playerCapturedHTML = sortedPlayerCaptures.map(p => {
     const isWhitePiece = p === p.toUpperCase();
     const pieceClass = isWhitePiece ? 'captured-white' : 'captured-black';
     return `<span class="captured-piece ${pieceClass}">${pieces[p]}</span>`;
   }).join('');
   
   // AI captured pieces
-  aiCapturedEl.innerHTML = sortedAICaptures.map(p => {
+  const aiCapturedHTML = sortedAICaptures.map(p => {
     const isWhitePiece = p === p.toUpperCase();
     const pieceClass = isWhitePiece ? 'captured-white' : 'captured-black';
     return `<span class="captured-piece ${pieceClass}">${pieces[p]}</span>`;
   }).join('');
+  
+  // Update desktop elements
+  playerCapturedEl.innerHTML = playerCapturedHTML;
+  aiCapturedEl.innerHTML = aiCapturedHTML;
+  
+  // Update mobile elements
+  if (mobilePlayerCapturedEl) mobilePlayerCapturedEl.innerHTML = playerCapturedHTML;
+  if (mobileAiCapturedEl) mobileAiCapturedEl.innerHTML = aiCapturedHTML;
   
   // Update scores with advantage indicator
   if (scoreDiff > 0) {
@@ -1270,17 +1367,54 @@ function updateCapturedPiecesDisplay() {
     playerScoreEl.className = 'material-score advantage';
     aiScoreEl.textContent = '';
     aiScoreEl.className = 'material-score';
+    if (mobilePlayerScoreEl) {
+      mobilePlayerScoreEl.textContent = `+${scoreDiff}`;
+      mobilePlayerScoreEl.className = 'material-score advantage';
+    }
+    if (mobileAiScoreEl) {
+      mobileAiScoreEl.textContent = '';
+      mobileAiScoreEl.className = 'material-score';
+    }
   } else if (scoreDiff < 0) {
     aiScoreEl.textContent = `+${Math.abs(scoreDiff)}`;
     aiScoreEl.className = 'material-score advantage';
     playerScoreEl.textContent = '';
     playerScoreEl.className = 'material-score';
+    if (mobileAiScoreEl) {
+      mobileAiScoreEl.textContent = `+${Math.abs(scoreDiff)}`;
+      mobileAiScoreEl.className = 'material-score advantage';
+    }
+    if (mobilePlayerScoreEl) {
+      mobilePlayerScoreEl.textContent = '';
+      mobilePlayerScoreEl.className = 'material-score';
+    }
   } else {
     playerScoreEl.textContent = '';
     playerScoreEl.className = 'material-score';
     aiScoreEl.textContent = '';
     aiScoreEl.className = 'material-score';
+    if (mobilePlayerScoreEl) {
+      mobilePlayerScoreEl.textContent = '';
+      mobilePlayerScoreEl.className = 'material-score';
+    }
+    if (mobileAiScoreEl) {
+      mobileAiScoreEl.textContent = '';
+      mobileAiScoreEl.className = 'material-score';
+    }
   }
+
+  // Check for overflow on mobile captured lists and add class for fade effect
+  requestAnimationFrame(() => {
+    [mobilePlayerCapturedEl, mobileAiCapturedEl].forEach(el => {
+      if (el) {
+        if (el.scrollWidth > el.clientWidth) {
+          el.classList.add('has-overflow');
+        } else {
+          el.classList.remove('has-overflow');
+        }
+      }
+    });
+  });
 }
 
 function addCapturedPiece(piece, capturedByPlayerSide) {
