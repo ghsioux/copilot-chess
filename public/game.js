@@ -14,6 +14,9 @@ let isAnimating = false;
 let lastMove = null; // { from: 'e2', to: 'e4' }
 let playerColor = 'white'; // 'white' or 'black'
 
+// Session token to detect stale async operations (race condition prevention)
+let gameSessionToken = 0;
+
 // Captured pieces tracking
 let capturedByPlayer = []; // Pieces captured by the player
 let capturedByAI = []; // Pieces captured by the AI
@@ -35,6 +38,39 @@ let currentModelName = null; // Store the current AI model name
 
 // Pending promotion
 let pendingPromotion = null; // { from, to } when waiting for player to choose promotion piece
+
+// Abort current game session - stops animations, resets state, invalidates pending async operations
+function abortCurrentGame() {
+  // Increment session token to invalidate any pending async operations
+  gameSessionToken++;
+  
+  // Stop the thinking animation
+  document.querySelector('.copilot-logo')?.classList.remove('thinking');
+  
+  // Reset animation state
+  isAnimating = false;
+  
+  // Clear any pending selections (deselectSquare is defined later in the file)
+  if (typeof deselectSquare === 'function') {
+    deselectSquare();
+  }
+  
+  // Clear check highlights (clearCheckHighlight is defined later in the file)
+  if (typeof clearCheckHighlight === 'function') {
+    clearCheckHighlight();
+  }
+  
+  // Re-enable board (in case it was disabled)
+  const board = document.getElementById('chessBoard');
+  if (board) {
+    board.style.pointerEvents = 'auto';
+    board.style.opacity = '1';
+  }
+  
+  // Reset history navigation
+  isViewingHistory = false;
+  historyIndex = -1;
+}
 
 // Helper function to add a move to the history
 // color: 'w' for white, 'b' for black
@@ -146,12 +182,16 @@ initCustomDropdown();
 startGameBtn.disabled = true;
 startGameBtn.addEventListener('click', startNewGame);
 newGameBtn.addEventListener('click', () => {
+  // Abort any ongoing AI thinking before going back to setup
+  abortCurrentGame();
   gameContainer.style.display = 'none';
   gameSetup.style.display = 'flex';
 });
 flipBoardBtn.addEventListener('click', flipBoard);
 resignBtn.addEventListener('click', () => {
   if (confirm('Are you sure you want to resign? 🏳️')) {
+    // Abort any ongoing AI thinking before resigning
+    abortCurrentGame();
     turnIndicator.textContent = 'You resigned! 🏳️';
     disableBoard();
   }
@@ -245,6 +285,10 @@ async function startNewGame() {
       alert('Please select a model.');
       return;
     }
+    
+    // Abort any previous game session
+    abortCurrentGame();
+    
     const response = await fetch('/api/game/new', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -387,6 +431,9 @@ async function requestAIMove(aiInCheck = false, currentFen = null) {
   if (isAnimating) return;
   if (isViewingHistory) return;
 
+  // Capture current session token to detect if game was aborted during async operations
+  const currentSessionToken = gameSessionToken;
+  
   isAnimating = true;
   document.querySelector('.copilot-logo')?.classList.add('thinking');
   
@@ -407,6 +454,13 @@ async function requestAIMove(aiInCheck = false, currentFen = null) {
       headers: { 'Content-Type': 'application/json' }
     });
     const data = await response.json();
+    
+    // Check if game was aborted during the AI thinking - if so, discard the result
+    if (currentSessionToken !== gameSessionToken) {
+      console.log('🚫 AI move discarded - game session was aborted');
+      return;
+    }
+    
     if (!response.ok || data.error) throw new Error(data.error || 'AI move failed');
 
     if (data.aiMove?.from && data.aiMove?.to) {
@@ -415,6 +469,13 @@ async function requestAIMove(aiInCheck = false, currentFen = null) {
       if (aiCapturedPieceCode) addCapturedPiece(aiCapturedPieceCode, false);
 
       await animateMove(data.aiMove.from, data.aiMove.to);
+      
+      // Check again after animation
+      if (currentSessionToken !== gameSessionToken) {
+        console.log('🚫 AI move animation completed but game session was aborted');
+        return;
+      }
+      
       lastMove = { from: data.aiMove.from, to: data.aiMove.to };
     }
 
@@ -430,12 +491,18 @@ async function requestAIMove(aiInCheck = false, currentFen = null) {
     isViewingHistory = false;
     updateStatus(data);
   } catch (err) {
-    console.error('AI move failed:', err);
-    turnIndicator.textContent = '❌ AI failed to move';
+    // Only show error if game wasn't aborted
+    if (currentSessionToken === gameSessionToken) {
+      console.error('AI move failed:', err);
+      turnIndicator.textContent = '❌ AI failed to move';
+    }
   }
 
-  document.querySelector('.copilot-logo')?.classList.remove('thinking');
-  isAnimating = false;
+  // Only reset animation state if this is still the current session
+  if (currentSessionToken === gameSessionToken) {
+    document.querySelector('.copilot-logo')?.classList.remove('thinking');
+    isAnimating = false;
+  }
 }
 
 // Render the chess board from FEN
@@ -786,6 +853,9 @@ function animateMove(from, to, promotedPiece = null) {
 
 // Make a move
 async function makeMove(from, to, promotion = null) {
+  // Capture current session token to detect if game was aborted during async operations
+  const currentSessionToken = gameSessionToken;
+  
   isAnimating = true;
   deselectSquare();
   clearCheckHighlight(); // Clear check highlight when player starts moving
@@ -805,6 +875,12 @@ async function makeMove(from, to, promotion = null) {
   // For promotion, pass the promoted piece code (uppercase for white, lowercase for black)
   const promotedPieceCode = promotion ? (playerColor === 'white' ? promotion.toUpperCase() : promotion.toLowerCase()) : null;
   await animateMove(from, to, promotedPieceCode);
+
+  // Check if game was aborted during animation
+  if (currentSessionToken !== gameSessionToken) {
+    console.log('🚫 Player move discarded - game session was aborted during animation');
+    return;
+  }
 
   // 2. IMMÉDIATEMENT après l'animation: allumer les cases du joueur
   lastMove = { from: from, to: to };
@@ -827,6 +903,12 @@ async function makeMove(from, to, promotion = null) {
     });
 
     const playerData = await playerResponse.json();
+    
+    // Check if game was aborted during the API call
+    if (currentSessionToken !== gameSessionToken) {
+      console.log('🚫 Player move response discarded - game session was aborted');
+      return;
+    }
     
     if (playerData.error) {
       alert(playerData.error);
@@ -883,6 +965,12 @@ async function makeMove(from, to, promotion = null) {
 
     const aiData = await aiResponse.json();
     
+    // Check if game was aborted during the AI API call
+    if (currentSessionToken !== gameSessionToken) {
+      console.log('🚫 AI move response discarded - game session was aborted');
+      return;
+    }
+    
     if (aiData.error) {
       console.error('AI move error:', aiData.error);
       alert('AI failed to make a move: ' + aiData.error);
@@ -902,6 +990,13 @@ async function makeMove(from, to, promotion = null) {
       }
       
       await animateMove(aiData.aiMove.from, aiData.aiMove.to);
+      
+      // Check if game was aborted during AI animation
+      if (currentSessionToken !== gameSessionToken) {
+        console.log('🚫 AI move animation completed but game session was aborted');
+        return;
+      }
+      
       lastMove = { from: aiData.aiMove.from, to: aiData.aiMove.to };
     }
 
@@ -929,14 +1024,20 @@ async function makeMove(from, to, promotion = null) {
 
     updateStatus(aiData);
   } catch (error) {
-    console.error('Error making move:', error);
-    alert('Failed to make move. Please try again.');
-    const colorName = playerColor === 'white' ? 'White' : 'Black';
-    document.querySelector('.copilot-logo')?.classList.remove('thinking');
-    turnIndicator.textContent = `Your turn (${colorName})`;
+    // Only show error if game wasn't aborted
+    if (currentSessionToken === gameSessionToken) {
+      console.error('Error making move:', error);
+      alert('Failed to make move. Please try again.');
+      const colorName = playerColor === 'white' ? 'White' : 'Black';
+      document.querySelector('.copilot-logo')?.classList.remove('thinking');
+      turnIndicator.textContent = `Your turn (${colorName})`;
+    }
   }
   
-  isAnimating = false;
+  // Only reset animation state if this is still the current session
+  if (currentSessionToken === gameSessionToken) {
+    isAnimating = false;
+  }
 }
 
 async function getCurrentFen() {
