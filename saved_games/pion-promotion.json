@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "gameId": "321d720a-c2da-4f3a-8a3d-189358722084",
+  "fen": "r2qkb1r/ppP1pppp/n4n2/8/6b1/8/PPPP1PPP/RNBQKBNR w KQkq - 1 5",
+  "moves": ["e4", "d5", "exd5", "Nf6", "d6", "Bg4", "dxc7", "Na6"],
+  "positionHistory": [
+    {"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "lastMove": null},
+    {"fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", "lastMove": {"from": "e2", "to": "e4"}},
+    {"fen": "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", "lastMove": {"from": "d7", "to": "d5"}},
+    {"fen": "rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2", "lastMove": {"from": "e4", "to": "d5"}},
+    {"fen": "rnbqkb1r/ppp1pppp/5n2/3P4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 1 3", "lastMove": {"from": "g8", "to": "f6"}},
+    {"fen": "rnbqkb1r/ppp1pppp/3P1n2/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 3", "lastMove": {"from": "d5", "to": "d6"}},
+    {"fen": "rn1qkb1r/ppp1pppp/3P1n2/8/6b1/8/PPPP1PPP/RNBQKBNR w KQkq - 1 4", "lastMove": {"from": "c8", "to": "g4"}},
+    {"fen": "rn1qkb1r/ppP1pppp/5n2/8/6b1/8/PPPP1PPP/RNBQKBNR b KQkq - 0 4", "lastMove": {"from": "d6", "to": "c7"}},
+    {"fen": "r2qkb1r/ppP1pppp/n4n2/8/6b1/8/PPPP1PPP/RNBQKBNR w KQkq - 1 5", "lastMove": {"from": "b8", "to": "a6"}}
+  ],
+  "capturedByWhite": ["p", "p"],
+  "capturedByBlack": [],
+  "model": "Claude Sonnet 4.5",
+  "playerColor": "white",
+  "aiColor": "black"
+}

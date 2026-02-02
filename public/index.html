@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>♟️ Copilot Chess - Battle the AI! 🤖</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="game-setup" id="gameSetup">
+      <div class="setup-card">
+        <h2>🎮 Choose Your Destiny</h2>
+        <p class="setup-subtitle">Select a model and prepare for battle!</p>
+        
+        <div class="model-selector">
+          <label class="model-label">Choose a model:</label>
+          <div class="custom-dropdown" id="modelDropdown">
+            <div class="dropdown-selected" id="dropdownSelected">
+              <span class="selected-text">Loading models...</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-options" id="dropdownOptions"></div>
+          </div>
+          <input type="hidden" id="modelSelect" />
+        </div>
+
+        <button id="startGameBtn" class="start-btn">
+          <span>⚔️ START BATTLE ⚔️</span>
+        </button>
+
+        <button id="loadGameBtnSetup" class="start-btn">
+          <span>📂 LOAD GAME</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="game-container" id="gameContainer" style="display: none;">
+      <!-- Mobile Copilot logo (hidden on desktop) -->
+      <div class="mobile-copilot-logo" id="mobileCopilotLogo">
+        <img src="copilot-logo.png" alt="Copilot" />
+      </div>
+
+      <!-- Mobile AI captured pieces - top (hidden on desktop) -->
+      <div class="mobile-captured ai-captured">
+        <div class="captured-label">Copilot</div>
+        <div id="mobileAiCaptured" class="captured-list"></div>
+        <span id="mobileAiMaterialScore" class="material-score"></span>
+      </div>
+
+      <div class="game-info">
+        <div class="copilot-logo">
+          <img src="copilot-logo.png" alt="Copilot" />
+        </div>
+        <div class="info-panel">
+          <div class="status-box">
+            <div id="gameStatus" class="game-status-message"></div>
+            <div id="turnIndicator" class="turn-indicator">Your turn (White)</div>
+          </div>
+          
+          <div class="difficulty-display">
+            <strong>Model:</strong> <span id="currentDifficulty">-</span>
+          </div>
+
+          <div class="move-history">
+            <h3>Move History</h3>
+            <div id="moveHistory" class="moves-list"></div>
+          </div>
+
+          <div class="action-toolbar" aria-label="Game actions">
+            <button id="newGameBtn" class="action-btn icon-btn" type="button" aria-label="New Game" data-tooltip="New Game">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6V4Z"/>
+              </svg>
+            </button>
+            <button id="loadGameBtn" class="action-btn icon-btn" type="button" aria-label="Load Game" data-tooltip="Load Game">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M10 4h4l2 2h4a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h6Zm12 9v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7h9l-2 2H2v2h18v-2h-7l2-2h7Z"/>
+              </svg>
+            </button>
+            <button id="saveGameBtn" class="action-btn icon-btn" type="button" aria-label="Save Game" data-tooltip="Save Game">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M5 3h11l3 3v15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v6h10V7.5L15.5 5H7Zm0 16h10v-8H7v8Zm2-1.5h6v-4H9v4Z"/>
+              </svg>
+            </button>
+            <button id="flipBoardBtn" class="action-btn icon-btn" type="button" aria-label="Flip Board" data-tooltip="Flip Board">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M7 4h2v11h3l-4 4-4-4h3V4Zm10 16h-2V9h-3l4-4 4 4h-3v11Z"/>
+              </svg>
+            </button>
+            <button id="resignBtn" class="action-btn icon-btn resign-btn" type="button" aria-label="Resign" data-tooltip="Resign">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M6 2h2v20H6v-2H4v-2h2V2Zm4 2h9l-2.5 4L19 12h-9V4Z"/>
+              </svg>
+            </button>
+          </div>
+          <input id="loadGameFileInput" type="file" accept="application/json" style="display:none" />
+        </div>
+      </div>
+
+      <div class="chess-board-container">
+        <div class="board-with-coordinates">
+          <div class="coordinates-ranks">
+            <span>8</span><span>7</span><span>6</span><span>5</span>
+            <span>4</span><span>3</span><span>2</span><span>1</span>
+          </div>
+          <div id="chessBoard" class="chess-board"></div>
+        </div>
+        <div class="coordinates-files">
+          <span>a</span><span>b</span><span>c</span><span>d</span>
+          <span>e</span><span>f</span><span>g</span><span>h</span>
+        </div>
+      </div>
+
+      <!-- Mobile Player captured pieces - bottom (hidden on desktop) -->
+      <div class="mobile-captured player-captured">
+        <div class="captured-label">You</div>
+        <div id="mobilePlayerCaptured" class="captured-list"></div>
+        <span id="mobilePlayerMaterialScore" class="material-score"></span>
+      </div>
+
+      <!-- Mobile turn indicator - now at bottom (hidden on desktop) -->
+      <div class="mobile-turn-indicator" id="mobileTurnIndicator">Your turn (White)</div>
+
+      <!-- Mobile action buttons (hidden on desktop) -->
+      <div class="mobile-actions">
+        <button id="mobilePrevMoveBtn" class="action-btn icon-btn" type="button" aria-label="Previous Move">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+          </svg>
+        </button>
+        <button id="mobileNextMoveBtn" class="action-btn icon-btn" type="button" aria-label="Next Move">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+          </svg>
+        </button>
+        <button id="mobileNewGameBtn" class="action-btn icon-btn" type="button" aria-label="New Game">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6V4Z"/>
+          </svg>
+        </button>
+        <button id="mobileLoadGameBtn" class="action-btn icon-btn" type="button" aria-label="Load Game">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M10 4h4l2 2h4a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h6Zm12 9v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7h9l-2 2H2v2h18v-2h-7l2-2h7Z"/>
+          </svg>
+        </button>
+        <button id="mobileSaveGameBtn" class="action-btn icon-btn" type="button" aria-label="Save Game">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M5 3h11l3 3v15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v6h10V7.5L15.5 5H7Zm0 16h10v-8H7v8Zm2-1.5h6v-4H9v4Z"/>
+          </svg>
+        </button>
+        <button id="mobileFlipBoardBtn" class="action-btn icon-btn" type="button" aria-label="Flip Board">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M7 4h2v11h3l-4 4-4-4h3V4Zm10 16h-2V9h-3l4-4 4 4h-3v11Z"/>
+          </svg>
+        </button>
+        <button id="mobileResignBtn" class="action-btn icon-btn resign-btn" type="button" aria-label="Resign">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M6 2h2v20H6v-2H4v-2h2V2Zm4 2h9l-2.5 4L19 12h-9V4Z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="captured-pieces-panel">
+        <div class="captured-pieces-bar ai-captured">
+          <div class="captured-label">Copilot</div>
+          <div id="aiCaptured" class="captured-list"></div>
+          <span id="aiMaterialScore" class="material-score"></span>
+        </div>
+        <div class="captured-pieces-bar player-captured">
+          <div class="captured-label">You</div>
+          <div id="playerCaptured" class="captured-list"></div>
+          <span id="playerMaterialScore" class="material-score"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promotion Modal -->
+    <div id="promotionModal" class="promotion-modal">
+      <div class="promotion-modal-content">
+        <h3>Choose Promotion</h3>
+        <div class="promotion-pieces">
+          <button class="promotion-piece" data-piece="q" aria-label="Queen">♛</button>
+          <button class="promotion-piece" data-piece="r" aria-label="Rook">♜</button>
+          <button class="promotion-piece" data-piece="b" aria-label="Bishop">♝</button>
+          <button class="promotion-piece" data-piece="n" aria-label="Knight">♞</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>💻 Powered by Copilot SDK | Made with ❤️ and ☕</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.4.0/dist/chess.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
