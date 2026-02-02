@@ -5,10 +5,7 @@ Play chess against GitHub Copilot! Choose any available Copilot model and challe
 ## Prerequisites
 
 - Node.js v18+
-- GitHub Copilot CLI authenticated:
-  ```bash
-  copilot auth login
-  ```
+- GitHub Copilot CLI installed and authenticated
 
 ## Quick Start
 
