@@ -43,33 +43,6 @@ const modelsReady = (async () => {
   return availableModels;
 })();
 
-// Pre-warmed MCP session for GitHub issue creation (reused across requests)
-let mcpGithubSession = null;
-const mcpSessionReady = (async () => {
-  await copilotReady;
-  if (copilotStartError) return;
-  try {
-    mcpGithubSession = await copilotClient.createSession({
-      model: 'GPT-4.1',
-      systemMessage: {
-        content: 'You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}'
-      },
-      mcpServers: {
-        github: {
-          type: 'http',
-          url: 'https://api.githubcopilot.com/mcp/',
-          tools: ['issue_write'],
-        }
-      },
-      onPermissionRequest: () => ({ kind: 'approved' }),
-      infiniteSessions: { enabled: false },
-    });
-    console.log('🔗 GitHub MCP session pre-warmed');
-  } catch (err) {
-    console.error('⚠️ Failed to pre-warm MCP session (will retry on demand):', err.message);
-  }
-})();
-
 const resolveModel = (name) => {
   if (!availableModels.length) return DEFAULT_MODEL;
   const defaultName = availableModels.find(m => m.name === DEFAULT_MODEL)?.name || availableModels[0]?.name || DEFAULT_MODEL;
@@ -77,14 +50,20 @@ const resolveModel = (name) => {
   return availableModels.find(m => m.name === name)?.name || defaultName;
 };
 
-async function createCopilotSession(modelName = DEFAULT_MODEL, aiColor = 'black') {
+// ─── Copilot Session Factories ──────────────────────────────────────────────
+
+/**
+ * Creates a Copilot session that plays chess as a grandmaster.
+ * One session per game — maintains conversation history for move context.
+ */
+async function createChessmasterCopilotSession(modelName = DEFAULT_MODEL, aiColor = 'black') {
   await modelsReady;
   await copilotReady;
   if (copilotStartError) throw copilotStartError;
-  
+
   const model = resolveModel(modelName);
-  console.log(`🎮 Creating session with model: ${model}, AI plays ${aiColor}`);
-  
+  console.log(`♟️ Creating Chessmaster session (model: ${model}, color: ${aiColor})`);
+
   return copilotClient.createSession({
     model,
     systemMessage: {
@@ -101,6 +80,36 @@ CRITICAL INSTRUCTIONS:
 
 You receive the current FEN and the list of legal moves. Respond with exactly one legal move in SAN from the provided list. Do not explain. Output only the SAN.`
     },
+  });
+}
+
+/**
+ * Creates a Copilot session that can create GitHub issues via the GitHub MCP Server.
+ * Uses the remote MCP endpoint — auth is handled by the Copilot SDK.
+ * A single session is pre-warmed at startup and reused for all saves.
+ */
+async function createIssueCreatorCopilotSession() {
+  await copilotReady;
+  if (copilotStartError) throw copilotStartError;
+
+  console.log('🔗 Creating Issue Creator session (MCP: github)...');
+
+  return copilotClient.createSession({
+    model: 'GPT-4.1',
+    systemMessage: {
+      content: 'You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}'
+    },
+    mcpServers: {
+      github: {
+        type: 'http',
+        url: 'https://api.githubcopilot.com/mcp/',
+        tools: ['issue_write'],
+      }
+    },
+    // Auto-approve MCP tool calls (required for non-interactive server usage)
+    onPermissionRequest: () => ({ kind: 'approved' }),
+    // No need for persistent context — each issue creation is independent
+    infiniteSessions: { enabled: false },
   });
 }
 
@@ -129,6 +138,17 @@ async function getCopilotMove(session, chessInstance, aiColor = 'black') {
   }
   return aiSan;
 }
+
+// Pre-warm the Issue Creator session at startup for faster first save
+let mcpGithubSession = null;
+const mcpSessionReady = (async () => {
+  try {
+    mcpGithubSession = await createIssueCreatorCopilotSession();
+    console.log('✅ Issue Creator session ready');
+  } catch (err) {
+    console.error('⚠️ Failed to pre-warm Issue Creator session (will retry on demand):', err.message);
+  }
+})();
 
 function buildGameSnapshot(game, gameId) {
   const { chess, model, playerColor, aiColor } = game;
@@ -222,7 +242,7 @@ app.post('/api/game/new', async (req, res) => {
     const aiColor = playerColor === 'white' ? 'black' : 'white';
     console.log(`🎲 Random color assignment: Player = ${playerColor}, AI = ${aiColor}`);
     
-    const session = await createCopilotSession(modelName, aiColor);
+    const session = await createChessmasterCopilotSession(modelName, aiColor);
     
     games.set(gameId, { chess, session, model: modelName, playerColor, aiColor });
     
@@ -303,26 +323,13 @@ app.post('/api/game/:gameId/save-to-issue', async (req, res) => {
   try {
     console.log('📝 Saving game as GitHub issue via MCP...');
 
-    // Reuse pre-warmed session, or create a new one if needed
+    // Reuse pre-warmed session, or create a new one on demand
     await mcpSessionReady;
     if (mcpGithubSession) {
       mcpSession = mcpGithubSession;
     } else {
-      mcpSession = await copilotClient.createSession({
-        model: 'GPT-4.1',
-        systemMessage: {
-          content: 'You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}'
-        },
-        mcpServers: {
-          github: {
-            type: 'http',
-            url: 'https://api.githubcopilot.com/mcp/',
-            tools: ['issue_write'],
-          }
-        },
-        onPermissionRequest: () => ({ kind: 'approved' }),
-        infiniteSessions: { enabled: false },
-      });
+      mcpSession = await createIssueCreatorCopilotSession();
+      mcpGithubSession = mcpSession; // cache for next time
     }
 
     const prompt = `Create a GitHub issue with method "create" in repo owner="${owner}" repo="${repo}" with title="${title.replace(/"/g, '\\"')}" and the following body:\n\n${body}\n\nReturn only JSON: {"issueUrl": "https://github.com/${owner}/${repo}/issues/NUMBER", "issueNumber": NUMBER}`;
@@ -390,7 +397,7 @@ app.post('/api/game/import', async (req, res) => {
     }
 
     const gameId = crypto.randomUUID();
-    const session = await createCopilotSession(modelName, aiColor);
+    const session = await createChessmasterCopilotSession(modelName, aiColor);
     games.set(gameId, { chess, session, model: modelName, playerColor, aiColor });
 
     // Rebuild position history and captured pieces
