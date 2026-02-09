@@ -257,11 +257,46 @@ mobilePrevMoveBtn?.addEventListener('click', () => {
 mobileNextMoveBtn?.addEventListener('click', () => {
   navigateHistory('forward');
 });
-mobileSaveGameBtn?.addEventListener('click', async () => {
+mobileSaveGameBtn?.addEventListener('click', () => {
+  showSaveChoiceModal();
+});
+
+saveGameBtn?.addEventListener('click', () => {
+  showSaveChoiceModal();
+});
+
+// Save Choice Modal logic
+const saveChoiceModal = document.getElementById('saveChoiceModal');
+const saveToFileBtn = document.getElementById('saveToFileBtn');
+const saveToIssueBtn = document.getElementById('saveToIssueBtn');
+const saveChoiceCancelBtn = document.getElementById('saveChoiceCancelBtn');
+
+function showSaveChoiceModal() {
   if (!gameId) {
     alert('No active game to save.');
     return;
   }
+  // Remove any leftover status
+  const oldStatus = saveChoiceModal.querySelector('.save-choice-status');
+  if (oldStatus) oldStatus.remove();
+  // Re-enable buttons
+  saveToFileBtn.disabled = false;
+  saveToIssueBtn.disabled = false;
+  saveChoiceModal.classList.add('active');
+}
+
+function hideSaveChoiceModal() {
+  saveChoiceModal.classList.remove('active');
+}
+
+saveChoiceCancelBtn?.addEventListener('click', hideSaveChoiceModal);
+saveChoiceModal?.addEventListener('click', (e) => {
+  if (e.target === saveChoiceModal) hideSaveChoiceModal();
+});
+
+saveToFileBtn?.addEventListener('click', async () => {
+  if (!gameId) return;
+  hideSaveChoiceModal();
   try {
     const response = await fetch(`/api/game/${gameId}/export`);
     const data = await response.json();
@@ -283,30 +318,68 @@ mobileSaveGameBtn?.addEventListener('click', async () => {
   }
 });
 
-saveGameBtn?.addEventListener('click', async () => {
-  if (!gameId) {
-    alert('No active game to save.');
-    return;
-  }
-  try {
-    const response = await fetch(`/api/game/${gameId}/export`);
-    const data = await response.json();
-    if (!response.ok || data.error) throw new Error(data.error || 'Export failed');
+saveToIssueBtn?.addEventListener('click', async () => {
+  if (!gameId) return;
+  saveToFileBtn.disabled = true;
+  saveToIssueBtn.disabled = true;
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    a.download = `copilot-chess-save-${stamp}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('Save failed:', err);
-    alert(`Save failed: ${err.message || err}`);
+  // Show status message
+  let statusEl = saveChoiceModal.querySelector('.save-choice-status');
+  if (!statusEl) {
+    statusEl = document.createElement('div');
+    statusEl.className = 'save-choice-status';
+    saveChoiceModal.querySelector('.save-choice-modal-content').appendChild(statusEl);
   }
+  statusEl.textContent = 'Creating GitHub issue...';
+
+  try {
+    const response = await fetch(`/api/game/${gameId}/save-to-issue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json();
+
+    if (data.code === 'NO_WRITE_ACCESS') {
+      hideSaveChoiceModal();
+      showPermissionModal(data.repoUrl);
+      return;
+    }
+
+    if (!response.ok || data.error) throw new Error(data.error || 'Failed to create issue');
+
+    statusEl.innerHTML = `Issue created! <a href="${data.issueUrl}" target="_blank" rel="noopener">#${data.issueNumber}</a>`;
+    setTimeout(hideSaveChoiceModal, 2500);
+  } catch (err) {
+    console.error('Save to issue failed:', err);
+    statusEl.textContent = `Error: ${err.message || err}`;
+    saveToFileBtn.disabled = false;
+    saveToIssueBtn.disabled = false;
+  }
+});
+
+// Permission Denied Modal logic
+const permissionModal = document.getElementById('permissionModal');
+const permissionForkBtn = document.getElementById('permissionForkBtn');
+const permissionCloseBtn = document.getElementById('permissionCloseBtn');
+
+function showPermissionModal(repoUrl) {
+  if (!permissionModal) return;
+  // Set the fork link
+  if (permissionForkBtn && repoUrl) {
+    permissionForkBtn.onclick = () => {
+      window.open(repoUrl + '/fork', '_blank');
+    };
+  }
+  permissionModal.classList.add('active');
+}
+
+function hidePermissionModal() {
+  permissionModal?.classList.remove('active');
+}
+
+permissionCloseBtn?.addEventListener('click', hidePermissionModal);
+permissionModal?.addEventListener('click', (e) => {
+  if (e.target === permissionModal) hidePermissionModal();
 });
 
 loadGameBtn?.addEventListener('click', () => {

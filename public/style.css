@@ -966,6 +966,167 @@ body {
   transform: scale(1.05);
 }
 
+/* Save Choice Modal */
+.save-choice-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.save-choice-modal.active {
+  display: flex;
+}
+
+.save-choice-modal-content {
+  background: var(--bg-panel);
+  padding: 30px 40px;
+  text-align: center;
+  position: relative;
+  animation: fadeIn 0.2s ease-out;
+  min-width: 340px;
+}
+
+.save-choice-modal-content::before,
+.save-choice-modal-content::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--neon-primary);
+  border-style: solid;
+}
+
+.save-choice-modal-content::before {
+  top: 0;
+  left: 0;
+  border-width: 3px 0 0 3px;
+}
+
+.save-choice-modal-content::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 3px 3px 0;
+}
+
+.save-choice-modal-content h3 {
+  color: var(--neon-secondary);
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.save-choice-subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 22px;
+}
+
+.save-choice-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.save-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 24px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.save-choice-btn:hover {
+  background: var(--bg-primary);
+  border-color: var(--neon-primary);
+  box-shadow: 0 0 15px rgba(139, 210, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.save-choice-btn:active {
+  transform: translateY(0);
+}
+
+.save-choice-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.save-choice-icon {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--neon-primary);
+}
+
+.save-choice-icon svg {
+  color: var(--neon-primary);
+}
+
+.save-choice-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.save-choice-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.save-choice-cancel {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 6px 20px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.save-choice-cancel:hover {
+  border-color: var(--neon-primary);
+  color: var(--text-primary);
+}
+
+.save-choice-status {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--neon-primary);
+  min-height: 1.2em;
+}
+
+.save-choice-status a {
+  color: var(--neon-secondary);
+  text-decoration: underline;
+}
+
+.permission-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.permission-modal-content {
+  max-width: 380px;
+}
+
 /* Footer */
 footer {
   position: absolute;

@@ -226,6 +226,116 @@ app.get('/api/game/:gameId/export', (req, res) => {
   res.json(buildGameSnapshot(game, gameId));
 });
 
+// Save game to a GitHub issue via Copilot SDK + GitHub MCP Server
+app.post('/api/game/:gameId/save-to-issue', async (req, res) => {
+  const { gameId } = req.params;
+  const game = games.get(gameId);
+  if (!game) return res.status(404).json({ error: 'Game not found' });
+
+  const snapshot = buildGameSnapshot(game, gameId);
+  const { chess, model, playerColor, aiColor } = game;
+  const moves = chess.history();
+  const totalMoves = moves.length;
+  const status = chess.isCheckmate() ? 'Checkmate'
+    : chess.isDraw() ? 'Draw'
+    : chess.isStalemate() ? 'Stalemate'
+    : 'In Progress';
+
+  const movePairs = [];
+  for (let i = 0; i < moves.length; i += 2) {
+    const num = Math.floor(i / 2) + 1;
+    movePairs.push(`${num}. ${moves[i]} ${moves[i + 1] || ''}`);
+  }
+
+  // Detect repo from git
+  let owner, repo;
+  try {
+    const { execSync } = await import('child_process');
+    const remoteUrl = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim();
+    const match = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/.]+)/);
+    if (match) { owner = match[1]; repo = match[2]; }
+  } catch { /* ignore */ }
+  if (!owner || !repo) {
+    return res.status(500).json({ error: 'Could not detect GitHub repo from git remote' });
+  }
+
+  const title = `♟️ Chess Game Save — ${status} (${totalMoves} moves, ${model})`;
+  const body = [
+    `## ♟️ Copilot Chess — Saved Game`,
+    '', '| Info | Value |', '|------|-------|',
+    `| **Status** | ${status} |`,
+    `| **Model** | ${model} |`,
+    `| **Player Color** | ${playerColor} |`,
+    `| **AI Color** | ${aiColor} |`,
+    `| **Total Moves** | ${totalMoves} |`,
+    `| **FEN** | \`${chess.fen()}\` |`,
+    '', '### Move History', '```', movePairs.join('\n'), '```',
+    '', '### Game Snapshot (for import)', '<details>', '<summary>Click to expand JSON</summary>',
+    '', '```json', JSON.stringify(snapshot, null, 2), '```', '</details>',
+  ].join('\n');
+
+  let mcpSession;
+  try {
+    console.log('📝 Creating MCP session to save game as GitHub issue...');
+
+    mcpSession = await copilotClient.createSession({
+      model: 'GPT-4.1',
+      systemMessage: {
+        content: `You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}`
+      },
+      mcpServers: {
+        github: {
+          type: 'http',
+          url: 'https://api.githubcopilot.com/mcp/',
+          tools: ['issue_write'],
+        }
+      },
+      // Auto-approve MCP tool calls (required for non-interactive usage)
+      onPermissionRequest: () => ({ kind: 'approved' }),
+      // Disable infinite sessions for this one-shot task
+      infiniteSessions: { enabled: false },
+    });
+
+    const escapedTitle = title.replace(/"/g, '\\"');
+    const escapedBody = body.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+    const prompt = `Create a GitHub issue with method "create" in repo owner="${owner}" repo="${repo}" with title="${escapedTitle}" and the following body:\n\n${body}\n\nReturn only JSON: {"issueUrl": "https://github.com/${owner}/${repo}/issues/NUMBER", "issueNumber": NUMBER}`;
+
+    console.log('📤 Sending MCP request...');
+    const result = await mcpSession.sendAndWait({ prompt });
+    const content = (result?.data?.content || '').trim();
+    console.log('📥 MCP response:', content);
+
+    // Parse JSON from response
+    let issueData;
+    const jsonMatch = content.match(/\{[^}]*"issueUrl"[^}]*\}/);
+    if (jsonMatch) {
+      try { issueData = JSON.parse(jsonMatch[0]); } catch { /* ignore */ }
+    }
+
+    if (issueData?.issueUrl) {
+      res.json({ issueUrl: issueData.issueUrl, issueNumber: issueData.issueNumber });
+    } else {
+      // Check if the response indicates a permission error
+      const lower = content.toLowerCase();
+      if (lower.includes('403') || lower.includes('forbidden') || lower.includes('permission') || lower.includes('not authorized') || lower.includes('resource not accessible')) {
+        return res.status(403).json({ error: 'You don\'t have write access to this repository.', code: 'NO_WRITE_ACCESS', repoUrl: `https://github.com/${owner}/${repo}` });
+      }
+      // Fallback: the issue was likely created but response parsing failed
+      res.json({ issueUrl: `https://github.com/${owner}/${repo}/issues`, issueNumber: null, note: 'Issue likely created — check repo' });
+    }
+  } catch (error) {
+    console.error('❌ Save to issue error:', error);
+    const msg = (error.message || '').toLowerCase();
+    if (msg.includes('403') || msg.includes('forbidden') || msg.includes('permission') || msg.includes('resource not accessible')) {
+      return res.status(403).json({ error: 'You don\'t have write access to this repository.', code: 'NO_WRITE_ACCESS', repoUrl: `https://github.com/${owner}/${repo}` });
+    }
+    res.status(500).json({ error: error.message || 'Failed to create issue via MCP' });
+  } finally {
+    mcpSession?.destroy().catch(() => {});
+  }
+});
+
 // Import a game snapshot (creates a NEW gameId)
 app.post('/api/game/import', async (req, res) => {
   const snapshot = req.body;
