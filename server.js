@@ -43,14 +43,39 @@ const modelsReady = (async () => {
   return availableModels;
 })();
 
+// Pre-warmed MCP session for GitHub issue creation (reused across requests)
+let mcpGithubSession = null;
+const mcpSessionReady = (async () => {
+  await copilotReady;
+  if (copilotStartError) return;
+  try {
+    mcpGithubSession = await copilotClient.createSession({
+      model: 'GPT-4.1',
+      systemMessage: {
+        content: 'You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}'
+      },
+      mcpServers: {
+        github: {
+          type: 'http',
+          url: 'https://api.githubcopilot.com/mcp/',
+          tools: ['issue_write'],
+        }
+      },
+      onPermissionRequest: () => ({ kind: 'approved' }),
+      infiniteSessions: { enabled: false },
+    });
+    console.log('🔗 GitHub MCP session pre-warmed');
+  } catch (err) {
+    console.error('⚠️ Failed to pre-warm MCP session (will retry on demand):', err.message);
+  }
+})();
+
 const resolveModel = (name) => {
   if (!availableModels.length) return DEFAULT_MODEL;
   const defaultName = availableModels.find(m => m.name === DEFAULT_MODEL)?.name || availableModels[0]?.name || DEFAULT_MODEL;
   if (!name) return defaultName;
   return availableModels.find(m => m.name === name)?.name || defaultName;
 };
-
-const getModelNames = () => availableModels.map(m => m.name);
 
 async function createCopilotSession(modelName = DEFAULT_MODEL, aiColor = 'black') {
   await modelsReady;
@@ -276,30 +301,31 @@ app.post('/api/game/:gameId/save-to-issue', async (req, res) => {
 
   let mcpSession;
   try {
-    console.log('📝 Creating MCP session to save game as GitHub issue...');
+    console.log('📝 Saving game as GitHub issue via MCP...');
 
-    mcpSession = await copilotClient.createSession({
-      model: 'GPT-4.1',
-      systemMessage: {
-        content: `You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}`
-      },
-      mcpServers: {
-        github: {
-          type: 'http',
-          url: 'https://api.githubcopilot.com/mcp/',
-          tools: ['issue_write'],
-        }
-      },
-      // Auto-approve MCP tool calls (required for non-interactive usage)
-      onPermissionRequest: () => ({ kind: 'approved' }),
-      // Disable infinite sessions for this one-shot task
-      infiniteSessions: { enabled: false },
-    });
+    // Reuse pre-warmed session, or create a new one if needed
+    await mcpSessionReady;
+    if (mcpGithubSession) {
+      mcpSession = mcpGithubSession;
+    } else {
+      mcpSession = await copilotClient.createSession({
+        model: 'GPT-4.1',
+        systemMessage: {
+          content: 'You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}'
+        },
+        mcpServers: {
+          github: {
+            type: 'http',
+            url: 'https://api.githubcopilot.com/mcp/',
+            tools: ['issue_write'],
+          }
+        },
+        onPermissionRequest: () => ({ kind: 'approved' }),
+        infiniteSessions: { enabled: false },
+      });
+    }
 
-    const escapedTitle = title.replace(/"/g, '\\"');
-    const escapedBody = body.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-
-    const prompt = `Create a GitHub issue with method "create" in repo owner="${owner}" repo="${repo}" with title="${escapedTitle}" and the following body:\n\n${body}\n\nReturn only JSON: {"issueUrl": "https://github.com/${owner}/${repo}/issues/NUMBER", "issueNumber": NUMBER}`;
+    const prompt = `Create a GitHub issue with method "create" in repo owner="${owner}" repo="${repo}" with title="${title.replace(/"/g, '\\"')}" and the following body:\n\n${body}\n\nReturn only JSON: {"issueUrl": "https://github.com/${owner}/${repo}/issues/NUMBER", "issueNumber": NUMBER}`;
 
     console.log('📤 Sending MCP request...');
     const result = await mcpSession.sendAndWait({ prompt });
@@ -331,9 +357,8 @@ app.post('/api/game/:gameId/save-to-issue', async (req, res) => {
       return res.status(403).json({ error: 'You don\'t have write access to this repository.', code: 'NO_WRITE_ACCESS', repoUrl: `https://github.com/${owner}/${repo}` });
     }
     res.status(500).json({ error: error.message || 'Failed to create issue via MCP' });
-  } finally {
-    mcpSession?.destroy().catch(() => {});
   }
+  // Don't destroy the session — it's reused
 });
 
 // Import a game snapshot (creates a NEW gameId)
