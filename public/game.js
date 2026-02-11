@@ -42,6 +42,89 @@ let pendingPromotion = null; // { from, to } when waiting for player to choose p
 // Game over state (checkmate, stalemate, draw, or resignation)
 let isGameOver = false;
 
+// Quote bubble state
+let quoteBubbleTimeout = null;
+let quoteBubbleHideTimers = [];
+
+function hideQuoteBubble() {
+  if (quoteBubbleTimeout) {
+    clearTimeout(quoteBubbleTimeout);
+    quoteBubbleTimeout = null;
+  }
+  // Clear any pending hide timers
+  quoteBubbleHideTimers.forEach(t => clearTimeout(t));
+  quoteBubbleHideTimers = [];
+
+  document.querySelectorAll('.quote-bubble').forEach(el => {
+    el.classList.remove('visible');
+    el.classList.add('hiding');
+    const timer = setTimeout(() => { el.style.display = 'none'; el.classList.remove('hiding'); }, 400);
+    quoteBubbleHideTimers.push(timer);
+  });
+}
+
+function showQuoteBubble(quote, attribution) {
+  // Cancel any pending hide timers first
+  if (quoteBubbleTimeout) {
+    clearTimeout(quoteBubbleTimeout);
+    quoteBubbleTimeout = null;
+  }
+  quoteBubbleHideTimers.forEach(t => clearTimeout(t));
+  quoteBubbleHideTimers = [];
+
+  // Desktop bubble
+  const bubble = document.getElementById('quoteBubble');
+  const textEl = document.getElementById('quoteText');
+  const attrEl = document.getElementById('quoteAttribution');
+  // Mobile bubble
+  const mobileBubble = document.getElementById('mobileQuoteBubble');
+  const mobileTextEl = document.getElementById('mobileQuoteText');
+  const mobileAttrEl = document.getElementById('mobileQuoteAttribution');
+
+  if (textEl) textEl.textContent = quote;
+  if (attrEl) attrEl.textContent = attribution;
+  if (mobileTextEl) mobileTextEl.textContent = quote;
+  if (mobileAttrEl) mobileAttrEl.textContent = attribution;
+
+  if (bubble) {
+    bubble.style.display = 'block';
+    // Force reflow before adding class
+    void bubble.offsetWidth;
+    bubble.classList.remove('hiding');
+    bubble.classList.add('visible');
+  }
+  if (mobileBubble) {
+    mobileBubble.style.display = 'block';
+    void mobileBubble.offsetWidth;
+    mobileBubble.classList.remove('hiding');
+    mobileBubble.classList.add('visible');
+  }
+
+  quoteBubbleTimeout = setTimeout(hideQuoteBubble, 5000);
+}
+
+function maybeShowQuote() {
+  if (isGameOver || isViewingHistory) return;
+  const roll = Math.random();
+  console.log(`🎙️ [QuoteMaster] Roll: ${roll.toFixed(2)} (need < 0.50)`);
+  if (roll >= 0.5) return;
+  console.log('🎙️ [QuoteMaster] Triggered! Fetching quote...');
+  fetch('/api/quote')
+    .then(r => {
+      console.log(`🎙️ [QuoteMaster] Response status: ${r.status}`);
+      return r.ok ? r.json() : null;
+    })
+    .then(data => {
+      if (data && data.quote) {
+        console.log(`🎙️ [QuoteMaster] Showing: "${data.quote}" — ${data.attribution}`);
+        showQuoteBubble(data.quote, data.attribution);
+      } else {
+        console.log('🎙️ [QuoteMaster] No quote available (pool empty)');
+      }
+    })
+    .catch(err => console.error('🎙️ [QuoteMaster] Fetch error:', err));
+}
+
 // Abort current game session - stops animations, resets state, invalidates pending async operations
 function abortCurrentGame() {
   // Increment session token to invalidate any pending async operations
@@ -52,6 +135,9 @@ function abortCurrentGame() {
   
   // Reset animation state
   isAnimating = false;
+
+  // Hide any visible quote bubble
+  hideQuoteBubble();
   
   // Clear any pending selections (deselectSquare is defined later in the file)
   if (typeof deselectSquare === 'function') {
@@ -666,6 +752,7 @@ async function requestAIMove(aiInCheck = false, currentFen = null) {
     historyIndex = -1;
     isViewingHistory = false;
     updateStatus(data);
+    maybeShowQuote();
   } catch (err) {
     // Only show error if game wasn't aborted
     if (currentSessionToken === gameSessionToken) {
@@ -1033,6 +1120,7 @@ async function makeMove(from, to, promotion = null) {
   const currentSessionToken = gameSessionToken;
   
   isAnimating = true;
+  hideQuoteBubble();
   deselectSquare();
   clearCheckHighlight(); // Clear check highlight when player starts moving
 
@@ -1199,6 +1287,7 @@ async function makeMove(from, to, promotion = null) {
     turnStartTime = Date.now();
 
     updateStatus(aiData);
+    maybeShowQuote();
   } catch (error) {
     // Only show error if game wasn't aborted
     if (currentSessionToken === gameSessionToken) {

@@ -1,0 +1,8 @@
+{
+  "name": "chessmaster-quote-generator",
+  "displayName": "Chessmaster Quote Generator",
+  "description": "Generates witty and wise chess quotes in the style of legendary grandmasters",
+  "version": "1.0.0",
+  "author": "Copilot Chess",
+  "prompts": ["prompts/system.md"]
+}

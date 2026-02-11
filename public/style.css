@@ -404,6 +404,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .copilot-logo.thinking img {
@@ -420,6 +421,115 @@ body {
   max-width: 200px;
   height: auto;
   image-rendering: pixelated;
+}
+
+/* ─── Quote Speech Bubble ──────────────────────────────────────────────────── */
+
+.quote-bubble {
+  position: absolute;
+  top: 50%;
+  right: calc(100% - 30px);
+  left: auto;
+  transform: translateY(-50%) scale(0);
+  background: var(--bg-secondary);
+  border: 2px dashed var(--neon-primary);
+  padding: 12px 16px;
+  min-width: 200px;
+  max-width: 280px;
+  z-index: 100;
+  box-shadow:
+    0 0 8px rgba(139, 210, 255, 0.3),
+    0 0 20px rgba(139, 210, 255, 0.1),
+    inset 0 0 12px rgba(139, 210, 255, 0.05);
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.quote-bubble::before {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 8px solid transparent;
+  border-left-color: var(--neon-primary);
+  filter: drop-shadow(2px 0 4px rgba(139, 210, 255, 0.3));
+}
+
+.quote-bubble.visible {
+  animation: quoteBubbleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.quote-bubble.hiding {
+  animation: quoteBubbleOut 0.4s ease-in forwards;
+}
+
+@keyframes quoteBubbleIn {
+  0% { opacity: 0; transform: translateY(-50%) scale(0); }
+  100% { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+
+@keyframes quoteBubbleOut {
+  0% { opacity: 1; transform: translateY(-50%) scale(1); }
+  100% { opacity: 0; transform: translateY(-50%) scale(0.8); }
+}
+
+.quote-text {
+  color: var(--neon-primary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.quote-text::before { content: '"'; }
+.quote-text::after { content: '"'; }
+
+.quote-attribution {
+  color: var(--neon-secondary);
+  font-size: 0.7rem;
+  margin-top: 6px;
+  text-align: right;
+}
+
+.quote-attribution::before { content: '— '; }
+
+/* Mobile quote bubble: positioned below the logo */
+.quote-bubble.mobile {
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  max-width: 260px;
+}
+
+.quote-bubble.mobile::before {
+  right: auto;
+  left: 50%;
+  top: auto;
+  bottom: 100%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-bottom-color: var(--neon-primary);
+  border-right-color: transparent;
+}
+
+.quote-bubble.mobile.visible {
+  animation: quoteBubbleMobileIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.quote-bubble.mobile.hiding {
+  animation: quoteBubbleMobileOut 0.4s ease-in forwards;
+}
+
+@keyframes quoteBubbleMobileIn {
+  0% { opacity: 0; transform: translateX(-50%) scale(0); }
+  100% { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+@keyframes quoteBubbleMobileOut {
+  0% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.8); }
 }
 
 .info-panel {
@@ -1406,6 +1516,7 @@ footer {
     justify-content: center;
     align-items: center;
     padding: 5px;
+    position: relative;
   }
 
   .mobile-copilot-logo img {

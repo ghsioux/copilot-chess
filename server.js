@@ -8,6 +8,10 @@ import crypto from 'crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// ══════════════════════════════════════════════════════════════════════════════
+// EXPRESS SETUP
+// ══════════════════════════════════════════════════════════════════════════════
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -16,6 +20,10 @@ app.use(express.static('public'));
 
 // Store active games
 const games = new Map();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COPILOT CLIENT & MODEL DISCOVERY
+// ══════════════════════════════════════════════════════════════════════════════
 
 const copilotClient = new CopilotClient();
 let copilotStartError = null;
@@ -50,7 +58,21 @@ const resolveModel = (name) => {
   return availableModels.find(m => m.name === name)?.name || defaultName;
 };
 
-// ─── Copilot Session Factories ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// COPILOT SESSIONS
+//
+// Three Copilot SDK sessions, each with a distinct role:
+//
+//   ① chessPlayerCopilotSession    — plays chess as a grandmaster (1 per game)
+//   ② gameSaverCopilotSession      — saves games as GitHub issues via MCP (singleton)
+//   ③ quoteGeneratorCopilotSession — generates chess quotes via a Skill (singleton)
+//
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── ① Chess Player Session ─────────────────────────────────────────────────
+// One session per game. Maintains conversation history for move continuity.
+// Created by: createChessmasterCopilotSession()
+// Used by:    getCopilotMove() → POST /api/game/:id/ai-move, /ai-first-move
 
 /**
  * Creates a Copilot session that plays chess as a grandmaster.
@@ -83,16 +105,47 @@ You receive the current FEN and the list of legal moves. Respond with exactly on
   });
 }
 
+async function getCopilotMove(chessPlayerCopilotSession, chessInstance, aiColor = 'black') {
+  const legalMovesVerbose = chessInstance.moves({ verbose: true });
+  if (!legalMovesVerbose.length) throw new Error('No legal moves');
+
+  const sans = legalMovesVerbose.map(m => m.san);
+  const ucis = legalMovesVerbose.map(m => `${m.from}${m.to}${m.promotion || ''}`);
+
+  const colorName = aiColor === 'white' ? 'White' : 'Black';
+  const prompt = [
+    `You are ${colorName} to move.`,
+    `FEN: ${chessInstance.fen()}`,
+    `Legal moves (SAN): ${sans.join(', ')}`,
+    `Legal moves (UCI): ${ucis.join(', ')}`,
+    'Return exactly one legal move in SAN, chosen from the SAN list above.',
+  ].join('\n');
+
+  const response = await chessPlayerCopilotSession.sendAndWait({ prompt });
+  const content = (response?.data?.content || '').trim();
+  const aiSan = content.split(/\s+/)[0]?.trim();
+  if (!aiSan) throw new Error('Empty response from Copilot');
+  if (!sans.includes(aiSan)) {
+    throw new Error(`Copilot returned illegal move (not in SAN list): ${aiSan}`);
+  }
+  return aiSan;
+}
+
+// ── ② Game Saver Session (MCP: GitHub) ──────────────────────────────────────
+// Singleton session, pre-warmed at startup. Creates GitHub issues via MCP.
+// Created by: createGameSaverCopilotSession()
+// Used by:    POST /api/game/:id/save-to-issue
+
 /**
  * Creates a Copilot session that can create GitHub issues via the GitHub MCP Server.
  * Uses the remote MCP endpoint — auth is handled by the Copilot SDK.
  * A single session is pre-warmed at startup and reused for all saves.
  */
-async function createIssueCreatorCopilotSession() {
+async function createGameSaverCopilotSession() {
   await copilotReady;
   if (copilotStartError) throw copilotStartError;
 
-  console.log('🔗 Creating Issue Creator session (MCP: github)...');
+  console.log('🔗 Creating Game Saver session (MCP: github)...');
 
   return copilotClient.createSession({
     model: 'GPT-4.1',
@@ -113,42 +166,96 @@ async function createIssueCreatorCopilotSession() {
   });
 }
 
-async function getCopilotMove(session, chessInstance, aiColor = 'black') {
-  const legalMovesVerbose = chessInstance.moves({ verbose: true });
-  if (!legalMovesVerbose.length) throw new Error('No legal moves');
+let gameSaverCopilotSession = null;
 
-  const sans = legalMovesVerbose.map(m => m.san);
-  const ucis = legalMovesVerbose.map(m => `${m.from}${m.to}${m.promotion || ''}`);
+// ── ③ Quote Generator Session (Skill) ──────────────────────────────────────
+// Singleton session, pre-warmed at startup. Generates chess quotes using a Copilot Skill.
+// Created by: createQuoteGeneratorSession()
+// Used by:    generateOneQuote() → GET /api/quote
 
-  const colorName = aiColor === 'white' ? 'White' : 'Black';
-  const prompt = [
-    `You are ${colorName} to move.`,
-    `FEN: ${chessInstance.fen()}`,
-    `Legal moves (SAN): ${sans.join(', ')}`,
-    `Legal moves (UCI): ${ucis.join(', ')}`,
-    'Return exactly one legal move in SAN, chosen from the SAN list above.',
-  ].join('\n');
+let quoteGeneratorCopilotSession = null;
 
-  const response = await session.sendAndWait({ prompt });
-  const content = (response?.data?.content || '').trim();
-  const aiSan = content.split(/\s+/)[0]?.trim();
-  if (!aiSan) throw new Error('Empty response from Copilot');
-  if (!sans.includes(aiSan)) {
-    throw new Error(`Copilot returned illegal move (not in SAN list): ${aiSan}`);
-  }
-  return aiSan;
+const QUOTE_POOL_TARGET = 5;
+const QUOTE_POOL_REFILL_THRESHOLD = 3;
+let quotePool = [];
+let isFillingQuotePool = false;
+
+async function createQuoteGeneratorSession() {
+  await copilotReady;
+  if (copilotStartError) throw copilotStartError;
+
+  console.log('💬 Creating Quote Generator session (skill: chessmaster-quote-generator)...');
+
+  return copilotClient.createSession({
+    model: 'GPT-4.1',
+    skillDirectories: [join(__dirname, 'skills', 'chessmaster-quote-generator')],
+  });
 }
 
-// Pre-warm the Issue Creator session at startup for faster first save
-let mcpGithubSession = null;
-const mcpSessionReady = (async () => {
-  try {
-    mcpGithubSession = await createIssueCreatorCopilotSession();
-    console.log('✅ Issue Creator session ready');
-  } catch (err) {
-    console.error('⚠️ Failed to pre-warm Issue Creator session (will retry on demand):', err.message);
+async function generateOneQuote() {
+  if (!quoteGeneratorCopilotSession) {
+    console.log('⚠️ [QuoteMaster] No session available');
+    return null;
   }
-})();
+  try {
+    console.log('🎙️ [QuoteMaster] Requesting quote from Copilot SDK...');
+    const startTime = Date.now();
+    const response = await quoteGeneratorCopilotSession.sendAndWait({
+      prompt: 'Generate one original chess quote attributed to a fictional grandmaster you invent. Respond ONLY with a single raw JSON object, no markdown: {"quote": "...", "attribution": "..."}',
+    });
+    const elapsed = Date.now() - startTime;
+    const content = (response?.data?.content || '').trim();
+    console.log(`🎙️ [QuoteMaster] Response in ${elapsed}ms: "${content}"`);
+
+    // Try JSON parse first
+    const jsonMatch = content.match(/\{[^}]*"quote"\s*:\s*"[^"]*"[^}]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (parsed.quote && parsed.attribution) {
+        console.log(`🎙️ [QuoteMaster] ✅ Parsed JSON: "${parsed.quote}" — ${parsed.attribution}`);
+        return parsed;
+      }
+    }
+
+    // Fallback: parse markdown-style "quote" — attribution
+    const mdMatch = content.match(/[""*>_ ]*([^""]+)[""*_ ]*\s*—\s*(.+)/);
+    if (mdMatch) {
+      const quote = mdMatch[1].trim().replace(/^\*+|\*+$/g, '').trim();
+      const attribution = mdMatch[2].trim().replace(/^\*+|\*+$/g, '').trim();
+      if (quote && attribution) {
+        console.log(`🎙️ [QuoteMaster] ✅ Parsed markdown fallback: "${quote}" — ${attribution}`);
+        return { quote, attribution };
+      }
+    }
+
+    console.log('⚠️ [QuoteMaster] Could not parse quote from response');
+  } catch (err) {
+    console.error('⚠️ [QuoteMaster] Generation failed:', err.message);
+  }
+  return null;
+}
+
+async function fillQuotePool() {
+  if (isFillingQuotePool) return;
+  isFillingQuotePool = true;
+  try {
+    while (quotePool.length < QUOTE_POOL_TARGET) {
+      const quote = await generateOneQuote();
+      if (quote) {
+        quotePool.push(quote);
+        console.log(`💬 Quote pool: ${quotePool.length}/${QUOTE_POOL_TARGET}`);
+      } else {
+        break; // stop on failure to avoid infinite loop
+      }
+    }
+  } finally {
+    isFillingQuotePool = false;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GAME UTILITIES
+// ══════════════════════════════════════════════════════════════════════════════
 
 function buildGameSnapshot(game, gameId) {
   const { chess, model, playerColor, aiColor } = game;
@@ -208,7 +315,51 @@ function validateSnapshot(snapshot) {
   return null;
 }
 
-// API Routes
+// ══════════════════════════════════════════════════════════════════════════════
+// STARTUP — Pre-warm Copilot sessions
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Pre-warm ② Game Saver session for faster first save
+const mcpSessionReady = (async () => {
+  try {
+    gameSaverCopilotSession = await createGameSaverCopilotSession();
+    console.log('✅ Game Saver session ready');
+  } catch (err) {
+    console.error('⚠️ Failed to pre-warm Game Saver session (will retry on demand):', err.message);
+  }
+})();
+
+// Pre-warm ③ Quote Generator session and fill the quote pool
+(async () => {
+  try {
+    quoteGeneratorCopilotSession = await createQuoteGeneratorSession();
+    console.log('✅ Quote Generator session ready');
+    fillQuotePool(); // fire-and-forget
+  } catch (err) {
+    console.error('⚠️ Failed to create Quote Generator session:', err.message);
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// API ROUTES
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Pop a pre-generated quote from the pool
+app.get('/api/quote', (req, res) => {
+  console.log(`🎙️ [QuoteMaster] GET /api/quote — pool size: ${quotePool.length}`);
+  if (quotePool.length === 0) {
+    console.log('🎙️ [QuoteMaster] Pool empty, returning 404');
+    return res.status(404).json({ empty: true });
+  }
+  const quote = quotePool.shift();
+  console.log(`🎙️ [QuoteMaster] Serving quote: "${quote.quote}" — ${quote.attribution} (${quotePool.length} remaining)`);
+  // Trigger background refill if running low
+  if (quotePool.length < QUOTE_POOL_REFILL_THRESHOLD) {
+    console.log(`🎙️ [QuoteMaster] Pool below threshold (${quotePool.length}/${QUOTE_POOL_REFILL_THRESHOLD}), triggering refill`);
+    fillQuotePool();
+  }
+  res.json(quote);
+});
 
 // List available models
 app.get('/api/models', async (req, res) => {
@@ -242,9 +393,9 @@ app.post('/api/game/new', async (req, res) => {
     const aiColor = playerColor === 'white' ? 'black' : 'white';
     console.log(`🎲 Random color assignment: Player = ${playerColor}, AI = ${aiColor}`);
     
-    const session = await createChessmasterCopilotSession(modelName, aiColor);
+    const chessPlayerCopilotSession = await createChessmasterCopilotSession(modelName, aiColor);
     
-    games.set(gameId, { chess, session, model: modelName, playerColor, aiColor });
+    games.set(gameId, { chess, chessPlayerCopilotSession, model: modelName, playerColor, aiColor });
     
     // Return immediately - don't wait for AI first move
     res.json({
@@ -319,23 +470,19 @@ app.post('/api/game/:gameId/save-to-issue', async (req, res) => {
     '', '```json', JSON.stringify(snapshot, null, 2), '```', '</details>',
   ].join('\n');
 
-  let mcpSession;
   try {
     console.log('📝 Saving game as GitHub issue via MCP...');
 
     // Reuse pre-warmed session, or create a new one on demand
     await mcpSessionReady;
-    if (mcpGithubSession) {
-      mcpSession = mcpGithubSession;
-    } else {
-      mcpSession = await createIssueCreatorCopilotSession();
-      mcpGithubSession = mcpSession; // cache for next time
+    if (!gameSaverCopilotSession) {
+      gameSaverCopilotSession = await createGameSaverCopilotSession();
     }
 
     const prompt = `Create a GitHub issue with method "create" in repo owner="${owner}" repo="${repo}" with title="${title.replace(/"/g, '\\"')}" and the following body:\n\n${body}\n\nReturn only JSON: {"issueUrl": "https://github.com/${owner}/${repo}/issues/NUMBER", "issueNumber": NUMBER}`;
 
     console.log('📤 Sending MCP request...');
-    const result = await mcpSession.sendAndWait({ prompt });
+    const result = await gameSaverCopilotSession.sendAndWait({ prompt });
     const content = (result?.data?.content || '').trim();
     console.log('📥 MCP response:', content);
 
@@ -397,8 +544,8 @@ app.post('/api/game/import', async (req, res) => {
     }
 
     const gameId = crypto.randomUUID();
-    const session = await createChessmasterCopilotSession(modelName, aiColor);
-    games.set(gameId, { chess, session, model: modelName, playerColor, aiColor });
+    const chessPlayerCopilotSession = await createChessmasterCopilotSession(modelName, aiColor);
+    games.set(gameId, { chess, chessPlayerCopilotSession, model: modelName, playerColor, aiColor });
 
     // Rebuild position history and captured pieces
     const tempChess = new Chess();
@@ -469,7 +616,7 @@ app.post('/api/game/:gameId/ai-first-move', async (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   
-  const { chess, session, model, aiColor } = game;
+  const { chess, chessPlayerCopilotSession, model, aiColor } = game;
   
   // Only process if it's AI's turn (white = 'w')
   if (chess.turn() !== 'w' || aiColor !== 'white') {
@@ -478,7 +625,7 @@ app.post('/api/game/:gameId/ai-first-move', async (req, res) => {
   
   try {
     const aiStartTime = Date.now();
-    const aiMoveSan = await getCopilotMove(session, chess, aiColor);
+    const aiMoveSan = await getCopilotMove(chessPlayerCopilotSession, chess, aiColor);
     const aiThinkTime = Date.now() - aiStartTime;
     
     const aiResult = chess.move(aiMoveSan);
@@ -513,7 +660,7 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
 
-  const { chess, session, model, aiColor } = game;
+  const { chess, chessPlayerCopilotSession, model, aiColor } = game;
   const aiTurn = aiColor === 'white' ? 'w' : 'b';
   if (chess.turn() !== aiTurn) {
     return res.status(400).json({ error: 'Not AI turn' });
@@ -525,7 +672,7 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
 
   try {
     const aiStartTime = Date.now();
-    const aiMoveSan = await getCopilotMove(session, chess, aiColor);
+    const aiMoveSan = await getCopilotMove(chessPlayerCopilotSession, chess, aiColor);
     const aiThinkTime = Date.now() - aiStartTime;
 
     const aiResult = chess.move(aiMoveSan);
@@ -645,12 +792,12 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
     return res.status(404).json({ error: 'Game not found' });
   }
   
-  const { chess, session, model, aiColor } = game;
+  const { chess, chessPlayerCopilotSession, model, aiColor } = game;
   
   try {
     // Copilot makes a move (with timing)
     const aiStartTime = Date.now();
-    const aiMoveSan = await getCopilotMove(session, chess, aiColor);
+    const aiMoveSan = await getCopilotMove(chessPlayerCopilotSession, chess, aiColor);
     const aiThinkTime = Date.now() - aiStartTime;
     
     const aiResult = chess.move(aiMoveSan);
@@ -706,7 +853,10 @@ app.get('/api/game/:gameId/moves/:square', (req, res) => {
   });
 });
 
-// Start server
+// ══════════════════════════════════════════════════════════════════════════════
+// SERVER & SHUTDOWN
+// ══════════════════════════════════════════════════════════════════════════════
+
 app.listen(port, () => {
   console.log(`🎮 Chess game server running on http://localhost:${port}`);
   console.log(`♟️  Ready to play against Copilot!`);
