@@ -428,8 +428,8 @@ body {
 .quote-bubble {
   position: absolute;
   top: 50%;
-  right: calc(100% - 30px);
-  left: auto;
+  left: calc(100% - 30px);
+  right: auto;
   transform: translateY(-50%) scale(0);
   background: var(--bg-secondary);
   border: 2px dashed var(--neon-primary);
@@ -450,12 +450,12 @@ body {
 .quote-bubble::before {
   content: '';
   position: absolute;
-  left: 100%;
+  right: 100%;
   top: 50%;
   transform: translateY(-50%);
   border: 8px solid transparent;
-  border-left-color: var(--neon-primary);
-  filter: drop-shadow(2px 0 4px rgba(139, 210, 255, 0.3));
+  border-right-color: var(--neon-primary);
+  filter: drop-shadow(-2px 0 4px rgba(139, 210, 255, 0.3));
 }
 
 .quote-bubble.visible {
