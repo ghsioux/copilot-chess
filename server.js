@@ -102,6 +102,7 @@ CRITICAL INSTRUCTIONS:
 
 You receive the current FEN and the list of legal moves. Respond with exactly one legal move in SAN from the provided list. Do not explain. Output only the SAN.`
     },
+    onPermissionRequest: () => ({ kind: 'approved' }),
   });
 }
 
@@ -189,6 +190,7 @@ async function createQuoteGeneratorSession() {
   return copilotClient.createSession({
     model: 'GPT-4.1',
     skillDirectories: [join(__dirname, 'skills', 'chessmaster-quote-generator')],
+    onPermissionRequest: () => ({ kind: 'approved' }),
   });
 }
 
