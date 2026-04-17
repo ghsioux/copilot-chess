@@ -265,20 +265,20 @@ async function fillQuotePool() {
 
 function buildGameSnapshot(game, gameId) {
   const { chess, model, playerColor, aiColor } = game;
-  
+
   // Rebuild position history and captured pieces by replaying moves
   const tempChess = new Chess();
   const positionHistory = [{ fen: tempChess.fen(), lastMove: null }];
   const capturedByWhite = []; // pieces captured by white player
   const capturedByBlack = []; // pieces captured by black player
-  
+
   const moves = chess.history({ verbose: true });
-  
+
   for (const move of moves) {
     tempChess.move(move.san);
     const lm = { from: move.from, to: move.to };
     positionHistory.push({ fen: tempChess.fen(), lastMove: lm });
-    
+
     if (move.captured) {
       // move.captured is lowercase piece type
       // White capturing means a black piece (lowercase) was captured
@@ -286,7 +286,7 @@ function buildGameSnapshot(game, gameId) {
       const capturedPieceCode = move.color === 'w'
         ? move.captured.toLowerCase()   // Black piece
         : move.captured.toUpperCase();  // White piece
-      
+
       if (move.color === 'w') {
         capturedByWhite.push(capturedPieceCode);
       } else {
@@ -294,7 +294,7 @@ function buildGameSnapshot(game, gameId) {
       }
     }
   }
-  
+
   return {
     version: 2,  // Bump version for new format
     gameId,
@@ -384,7 +384,7 @@ app.get('/api/models', async (req, res) => {
 // Create new game
 app.post('/api/game/new', async (req, res) => {
   const { model } = req.body;
-  
+
   try {
     await modelsReady;
     const modelName = resolveModel(model);
@@ -393,16 +393,16 @@ app.post('/api/game/new', async (req, res) => {
     }
     const gameId = crypto.randomUUID();
     const chess = new Chess();
-    
+
     // Randomly assign player color
     const playerColor = Math.random() < 0.5 ? 'white' : 'black';
     const aiColor = playerColor === 'white' ? 'black' : 'white';
     console.log(`🎲 Random color assignment: Player = ${playerColor}, AI = ${aiColor}`);
-    
+
     const chessPlayerCopilotSession = await createChessmasterCopilotSession(modelName, aiColor);
-    
+
     games.set(gameId, { chess, chessPlayerCopilotSession, model: modelName, playerColor, aiColor });
-    
+
     // Return immediately - don't wait for AI first move
     res.json({
       gameId,
@@ -440,8 +440,8 @@ app.post('/api/game/:gameId/save-to-issue', async (req, res) => {
   const totalMoves = moves.length;
   const status = chess.isCheckmate() ? 'Checkmate'
     : chess.isDraw() ? 'Draw'
-    : chess.isStalemate() ? 'Stalemate'
-    : 'In Progress';
+      : chess.isStalemate() ? 'Stalemate'
+        : 'In Progress';
 
   const movePairs = [];
   for (let i = 0; i < moves.length; i += 2) {
@@ -558,23 +558,23 @@ app.post('/api/game/import', async (req, res) => {
     const positionHistory = [{ fen: tempChess.fen(), lastMove: null }];
     const capturedByWhite = [];
     const capturedByBlack = [];
-    
+
     const verboseMoves = chess.history({ verbose: true });
     // Reset and replay to build history
     tempChess.reset();
     for (const move of verboseMoves) {
       tempChess.move(move.san);
-      positionHistory.push({ 
-        fen: tempChess.fen(), 
+      positionHistory.push({
+        fen: tempChess.fen(),
         lastMove: { from: move.from, to: move.to },
         isCheck: tempChess.isCheck()
       });
-      
+
       if (move.captured) {
         const capturedPieceCode = move.color === 'w'
           ? move.captured.toLowerCase()
           : move.captured.toUpperCase();
-        
+
         if (move.color === 'w') {
           capturedByWhite.push(capturedPieceCode);
         } else {
@@ -617,28 +617,28 @@ app.post('/api/game/import', async (req, res) => {
 app.post('/api/game/:gameId/ai-first-move', async (req, res) => {
   const { gameId } = req.params;
   const game = games.get(gameId);
-  
+
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
   }
-  
+
   const { chess, chessPlayerCopilotSession, model, aiColor } = game;
-  
+
   // Only process if it's AI's turn (white = 'w')
   if (chess.turn() !== 'w' || aiColor !== 'white') {
     return res.status(400).json({ error: 'Not AI turn to move first' });
   }
-  
+
   try {
     const aiStartTime = Date.now();
     const aiMoveSan = await getCopilotMove(chessPlayerCopilotSession, chess, aiColor);
     const aiThinkTime = Date.now() - aiStartTime;
-    
+
     const aiResult = chess.move(aiMoveSan);
     if (!aiResult) {
       throw new Error(`Copilot returned illegal move: ${aiMoveSan}`);
     }
-    
+
     res.json({
       fen: chess.fen(),
       aiMove: {
@@ -717,13 +717,13 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
 app.get('/api/game/:gameId', (req, res) => {
   const { gameId } = req.params;
   const game = games.get(gameId);
-  
+
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
   }
-  
+
   const { chess, model, playerColor, aiColor } = game;
-  
+
   res.json({
     fen: chess.fen(),
     pgn: chess.pgn(),
@@ -744,17 +744,17 @@ app.post('/api/game/:gameId/move', async (req, res) => {
   const { gameId } = req.params;
   const { move } = req.body;
   const game = games.get(gameId);
-  
+
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
   }
-  
+
   const { chess } = game;
-  
+
   try {
     // Make player move
     const result = chess.move(move);
-    
+
     if (!result) {
       return res.status(400).json({ error: 'Invalid move' });
     }
@@ -773,7 +773,7 @@ app.post('/api/game/:gameId/move', async (req, res) => {
     const aiCheckmate = chess.isCheckmate();
     const isGameOver = chess.isGameOver();
     console.log(`♟️ PLAYER played ${result.san} | PlayerCheck: false | AICheck: ${aiInCheck} | PlayerCheckmate: false | AICheckmate: ${aiCheckmate} | FEN: ${fenAfterPlayer}`);
-    
+
     res.json({
       fen: fenAfterPlayer,
       playerMove,
@@ -793,19 +793,19 @@ app.post('/api/game/:gameId/move', async (req, res) => {
 app.post('/api/game/:gameId/ai-move', async (req, res) => {
   const { gameId } = req.params;
   const game = games.get(gameId);
-  
+
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
   }
-  
+
   const { chess, chessPlayerCopilotSession, model, aiColor } = game;
-  
+
   try {
     // Copilot makes a move (with timing)
     const aiStartTime = Date.now();
     const aiMoveSan = await getCopilotMove(chessPlayerCopilotSession, chess, aiColor);
     const aiThinkTime = Date.now() - aiStartTime;
-    
+
     const aiResult = chess.move(aiMoveSan);
     if (!aiResult) {
       throw new Error(`Copilot returned illegal move: ${aiMoveSan}`);
@@ -818,13 +818,13 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
       color: aiResult.color,
       captured: aiResult.captured || null
     };
-    
+
     // After AI move: Player is now to move, so isCheck() tells if Player king is in check
     const playerInCheck = chess.isCheck();
     const playerCheckmate = chess.isCheckmate();
     const isGameOver = chess.isGameOver();
     console.log(`🤖 AI played ${aiResult.san} | PlayerCheck: ${playerInCheck} | AICheck: false | PlayerCheckmate: ${playerCheckmate} | AICheckmate: false | FEN: ${chess.fen()}`);
-    
+
     res.json({
       fen: chess.fen(),
       aiMove,
@@ -846,14 +846,14 @@ app.post('/api/game/:gameId/ai-move', async (req, res) => {
 app.get('/api/game/:gameId/moves/:square', (req, res) => {
   const { gameId, square } = req.params;
   const game = games.get(gameId);
-  
+
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
   }
-  
+
   const { chess } = game;
   const moves = chess.moves({ square, verbose: true });
-  
+
   res.json({
     moves: moves.map(m => m.to)
   });
