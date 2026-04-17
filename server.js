@@ -1,6 +1,6 @@
 import express from 'express';
 import { Chess } from 'chess.js';
-import { CopilotClient } from '@github/copilot-sdk';
+import { CopilotClient, approveAll } from '@github/copilot-sdk';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import crypto from 'crypto';
@@ -37,13 +37,13 @@ const copilotReady = (async () => {
   }
 })();
 
-const DEFAULT_MODEL = 'GPT-4.1';
+const DEFAULT_MODEL = 'gpt-4.1';
 let availableModels = [];
 const modelsReady = (async () => {
   await copilotReady;
   try {
     availableModels = await copilotClient.listModels();
-    console.log(`📊 Available models: ${availableModels.map(m => m.name).join(', ')}`);
+    console.log(`📊 Available models: ${availableModels.map(m => `${m.name} (${m.id})`).join(', ')}`);
   } catch (err) {
     console.error('❌ Failed to list Copilot models:', err);
     availableModels = [];
@@ -51,11 +51,13 @@ const modelsReady = (async () => {
   return availableModels;
 })();
 
-const resolveModel = (name) => {
+// Resolve a model name (display name) or id to the SDK model id
+const resolveModel = (nameOrId) => {
   if (!availableModels.length) return DEFAULT_MODEL;
-  const defaultName = availableModels.find(m => m.name === DEFAULT_MODEL)?.name || availableModels[0]?.name || DEFAULT_MODEL;
-  if (!name) return defaultName;
-  return availableModels.find(m => m.name === name)?.name || defaultName;
+  const defaultId = availableModels.find(m => m.id === DEFAULT_MODEL)?.id || availableModels[0]?.id || DEFAULT_MODEL;
+  if (!nameOrId) return defaultId;
+  const found = availableModels.find(m => m.name === nameOrId || m.id === nameOrId);
+  return found?.id || defaultId;
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -102,7 +104,7 @@ CRITICAL INSTRUCTIONS:
 
 You receive the current FEN and the list of legal moves. Respond with exactly one legal move in SAN from the provided list. Do not explain. Output only the SAN.`
     },
-    onPermissionRequest: () => ({ kind: 'approved' }),
+    onPermissionRequest: approveAll,
   });
 }
 
@@ -143,13 +145,14 @@ async function getCopilotMove(chessPlayerCopilotSession, chessInstance, aiColor 
  * A single session is pre-warmed at startup and reused for all saves.
  */
 async function createGameSaverCopilotSession() {
-  await copilotReady;
+  await modelsReady;
   if (copilotStartError) throw copilotStartError;
 
-  console.log('🔗 Creating Game Saver session (MCP: github)...');
+  const model = resolveModel('GPT-4.1');
+  console.log(`🔗 Creating Game Saver session (MCP: github, model: ${model})...`);
 
   return copilotClient.createSession({
-    model: 'GPT-4.1',
+    model,
     systemMessage: {
       content: 'You create GitHub issues. Use the issue_write MCP tool to create issues. Respond ONLY with raw JSON (no markdown): {"issueUrl": "...", "issueNumber": ...}'
     },
@@ -161,7 +164,7 @@ async function createGameSaverCopilotSession() {
       }
     },
     // Auto-approve MCP tool calls (required for non-interactive server usage)
-    onPermissionRequest: () => ({ kind: 'approved' }),
+    onPermissionRequest: approveAll,
     // No need for persistent context — each issue creation is independent
     infiniteSessions: { enabled: false },
   });
@@ -182,15 +185,16 @@ let quotePool = [];
 let isFillingQuotePool = false;
 
 async function createQuoteGeneratorSession() {
-  await copilotReady;
+  await modelsReady;
   if (copilotStartError) throw copilotStartError;
 
-  console.log('💬 Creating Quote Generator session (skill: chessmaster-quote-generator)...');
+  const model = resolveModel('GPT-4.1');
+  console.log(`💬 Creating Quote Generator session (skill: chessmaster-quote-generator, model: ${model})...`);
 
   return copilotClient.createSession({
-    model: 'GPT-4.1',
+    model,
     skillDirectories: [join(__dirname, 'skills', 'chessmaster-quote-generator')],
-    onPermissionRequest: () => ({ kind: 'approved' }),
+    onPermissionRequest: approveAll,
   });
 }
 
