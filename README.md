@@ -2,6 +2,9 @@
 
 Play chess against GitHub Copilot! Choose any available Copilot model and challenge it to a game. Built with the `@github/copilot-sdk`, chess.js, and a retro terminal-style UI.
 
+![Screenshot](screenshot.png)
+
+
 ## Prerequisites
 
 - Node.js v18+
