@@ -7,14 +7,16 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "postinstall": "node -e \"const fs=require('fs'),p='node_modules/vscode-jsonrpc/package.json';if(fs.existsSync(p)){const d=JSON.parse(fs.readFileSync(p));if(!d.exports||!d.exports['./node.js']){d.exports={'.':'./lib/node/main.js','./node':'./node.js','./node.js':'./node.js','./browser':'./browser.js','./browser.js':'./browser.js'};fs.writeFileSync(p,JSON.stringify(d,null,2))}}\""
+    "check": "node --check server.js && node --check public/game.js"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@github/copilot-sdk": "^0.2.2",
-    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@github/copilot-sdk": "1.0.11",
     "chess.js": "^1.4.0",
     "express": "^5.2.1"
   }

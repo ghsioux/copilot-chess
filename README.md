@@ -7,8 +7,8 @@ Play chess against GitHub Copilot! Choose any available Copilot model and challe
 
 ## Prerequisites
 
-- Node.js v18+
-- GitHub Copilot CLI installed and authenticated
+- Node.js `^20.19.0` or `>=22.12.0`
+- An authenticated GitHub Copilot account
 
 ## Quick Start
 
