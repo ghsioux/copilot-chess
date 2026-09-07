@@ -3,37 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>♟️ Copilot Chess - Battle the AI! 🤖</title>
+  <meta name="theme-color" content="#1a1a24">
+  <meta name="description" content="Your intuition. Copilot's intelligence. Pick a model and play your next game of chess.">
+  <title>Copilot Chess — Your move.</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <div class="game-setup" id="gameSetup">
-      <div class="setup-card">
-        <h2>🎮 Choose Your Destiny</h2>
-        <p class="setup-subtitle">Select a model and prepare for battle!</p>
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="Copilot Chess home">
+        <span class="brand-mark" aria-hidden="true">♞</span>
+        <span>copilot<span class="brand-light"> / chess</span></span>
+      </a>
+      <span class="header-caption"><span class="signal-dot"></span> HUMAN × MACHINE</span>
+    </header>
+
+    <main>
+    <section class="game-setup" id="gameSetup" aria-label="Set up a game">
+      <div class="setup-intro">
+        <p class="eyebrow"><span class="section-index">01 /</span> A DIFFERENT KIND OF OPPONENT</p>
+        <h1>Your intuition.<br><span>Its intelligence.</span></h1>
+        <p class="intro-description">Sixty-four squares. A new way to think.<br>Challenge a Copilot model and see who finds<br class="desktop-break"> the better move.</p>
+        <div class="chess-study" aria-hidden="true">
+          <div class="study-grid"></div>
+          <span class="study-orbit"></span>
+          <span class="study-knight">♞</span>
+          <span class="study-cross cross-one">+</span>
+          <span class="study-cross cross-two">+</span>
+          <span class="study-caption">HUMAN INSTINCT<br><span>MEETS MACHINE LOGIC</span></span>
+          <span class="study-coordinate">N / f3</span>
+        </div>
+      </div>
+
+      <section class="setup-card" aria-labelledby="setupTitle">
+        <div class="panel-topline"><span>NEW SESSION</span><span class="panel-code">[ 64 ]</span></div>
+        <div class="opponent-preview">
+          <div class="opponent-avatar"><img src="copilot-logo.png" alt="" width="112" height="112"></div>
+          <span class="opponent-tag">YOUR AI OPPONENT</span>
+        </div>
+        <h2 id="setupTitle">Meet your match.</h2>
+        <p class="setup-subtitle">Choose a mind to play against.</p>
         
         <div class="model-selector">
-          <label class="model-label">Choose a model:</label>
-          <div class="custom-dropdown" id="modelDropdown">
-            <div class="dropdown-selected" id="dropdownSelected">
-              <span class="selected-text">Loading models...</span>
-              <span class="dropdown-arrow">▼</span>
-            </div>
-            <div class="dropdown-options" id="dropdownOptions"></div>
+          <label class="model-label" for="modelSelect">Opponent model</label>
+          <div class="model-select-wrapper">
+            <select id="modelSelect" disabled aria-describedby="modelStatus">
+              <option value="">Loading models...</option>
+            </select>
+            <span class="select-chevron" aria-hidden="true">⌄</span>
           </div>
-          <input type="hidden" id="modelSelect" />
+          <p id="modelStatus" class="model-status" role="status">Connecting to Copilot...</p>
         </div>
 
-        <button id="startGameBtn" class="start-btn">
-          <span>⚔️ START BATTLE ⚔️</span>
+        <button id="startGameBtn" class="start-btn" disabled>
+          <span>Start a game</span><span aria-hidden="true">↗</span>
         </button>
 
-        <button id="loadGameBtnSetup" class="start-btn">
-          <span>📂 LOAD GAME</span>
+        <button id="loadGameBtnSetup" class="secondary-btn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h7l2 2h9v11H3V7Zm0 0V4h7l2 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          Resume a saved game
         </button>
-      </div>
-    </div>
+        <div class="setup-footnote"><span class="signal-dot"></span> NO CLOCK. JUST CHESS.</div>
+      </section>
+    </section>
 
     <div class="game-container" id="gameContainer" style="display: none;">
       <!-- Mobile Copilot logo (hidden on desktop) -->
@@ -55,15 +87,17 @@
       <div class="game-info">
         <div class="copilot-logo">
           <img src="copilot-logo.png" alt="Copilot" />
+          <div class="opponent-heading"><span class="eyebrow">ACROSS THE BOARD</span><h2>GitHub Copilot</h2></div>
           <div id="quoteBubble" class="quote-bubble" style="display: none;">
             <div class="quote-text" id="quoteText"></div>
             <div class="quote-attribution" id="quoteAttribution"></div>
           </div>
         </div>
         <div class="info-panel">
+          <div class="panel-topline"><span>SESSION / CONTROL</span><span class="panel-code">✧</span></div>
           <div class="status-box">
-            <div id="gameStatus" class="game-status-message"></div>
-            <div id="turnIndicator" class="turn-indicator">Your turn (White)</div>
+            <div id="gameStatus" class="game-status-message" role="status"></div>
+            <div id="turnIndicator" class="turn-indicator" role="status">Your turn (White)</div>
           </div>
           
           <div class="difficulty-display">
@@ -71,7 +105,7 @@
           </div>
 
           <div class="move-history">
-            <h3>Move History</h3>
+            <div class="history-heading"><h3>Move history</h3><span>↔ to review</span></div>
             <div id="moveHistory" class="moves-list"></div>
           </div>
 
@@ -107,12 +141,13 @@
       </div>
 
       <div class="chess-board-container">
+        <div class="board-heading"><span><span class="section-index">02 /</span> THE BOARD</span><span>EVERY MOVE MATTERS</span></div>
         <div class="board-with-coordinates">
           <div class="coordinates-ranks">
             <span>8</span><span>7</span><span>6</span><span>5</span>
             <span>4</span><span>3</span><span>2</span><span>1</span>
           </div>
-          <div id="chessBoard" class="chess-board"></div>
+          <div id="chessBoard" class="chess-board" aria-label="Chess board"></div>
         </div>
         <div class="coordinates-files">
           <span>a</span><span>b</span><span>c</span><span>d</span>
@@ -171,17 +206,18 @@
 
       <div class="captured-pieces-panel">
         <div class="captured-pieces-bar ai-captured">
-          <div class="captured-label">Copilot</div>
+          <div class="captured-label"><span class="player-dot ai-dot"></span>Copilot <span class="captured-caption">/ captured</span></div>
           <div id="aiCaptured" class="captured-list"></div>
           <span id="aiMaterialScore" class="material-score"></span>
         </div>
         <div class="captured-pieces-bar player-captured">
-          <div class="captured-label">You</div>
+          <div class="captured-label"><span class="player-dot"></span>You <span class="captured-caption">/ captured</span></div>
           <div id="playerCaptured" class="captured-list"></div>
           <span id="playerMaterialScore" class="material-score"></span>
         </div>
       </div>
     </div>
+    </main>
 
     <!-- Promotion Modal -->
     <div id="promotionModal" class="promotion-modal">
@@ -243,11 +279,11 @@
     </div>
 
     <footer>
-      <p>💻 Powered by Copilot SDK | Made with ❤️ and ☕</p>
+      <p>BUILT WITH <span>GITHUB COPILOT SDK</span></p>
+      <p class="footer-note">A classic game. An unexpected opponent.</p>
     </footer>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.4.0/dist/chess.min.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

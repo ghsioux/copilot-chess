@@ -225,73 +225,10 @@ if (desktopCopilotLogo && mobileCopilotLogoEl) {
   logoObserver.observe(desktopCopilotLogo, { attributes: true, attributeFilter: ['class'] });
 }
 
-// Custom dropdown elements
-const modelDropdown = document.getElementById('modelDropdown');
-const dropdownSelected = document.getElementById('dropdownSelected');
-const dropdownOptions = document.getElementById('dropdownOptions');
-
-// Custom dropdown functionality
-function initCustomDropdown() {
-  if (!dropdownSelected || !dropdownOptions || !modelDropdown) return;
-
-  // Toggle dropdown on click
-  dropdownSelected.addEventListener('click', (e) => {
-    e.stopPropagation();
-    modelDropdown.classList.toggle('open');
-  });
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!modelDropdown.contains(e.target)) {
-      modelDropdown.classList.remove('open');
-    }
-  });
-
-  // Close on escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      modelDropdown.classList.remove('open');
-    }
-  });
-}
-
-function populateDropdown(models) {
-  if (!dropdownOptions) return;
-  
-  dropdownOptions.innerHTML = models.map((m, index) => 
-    `<div class="dropdown-option${index === 0 ? ' selected' : ''}" data-value="${m.name}">${m.name}</div>`
-  ).join('');
-
-  // Add click handlers to options
-  dropdownOptions.querySelectorAll('.dropdown-option').forEach(option => {
-    option.addEventListener('click', (e) => {
-      const value = option.dataset.value;
-      selectDropdownOption(value);
-      modelDropdown.classList.remove('open');
-    });
-  });
-}
-
-function selectDropdownOption(value) {
-  selectedModel = value;
-  if (modelSelect) modelSelect.value = value;
-  
-  // Update selected text
-  const selectedTextEl = dropdownSelected.querySelector('.selected-text');
-  if (selectedTextEl) selectedTextEl.textContent = value;
-  
-  // Update selected state in options
-  dropdownOptions.querySelectorAll('.dropdown-option').forEach(opt => {
-    opt.classList.toggle('selected', opt.dataset.value === value);
-  });
-}
-
-function setDropdownText(text) {
-  const selectedTextEl = dropdownSelected?.querySelector('.selected-text');
-  if (selectedTextEl) selectedTextEl.textContent = text;
-}
-
-initCustomDropdown();
+const modelStatus = document.getElementById('modelStatus');
+modelSelect.addEventListener('change', () => {
+  selectedModel = modelSelect.value;
+});
 
 startGameBtn.disabled = true;
 startGameBtn.addEventListener('click', startNewGame);
@@ -507,24 +444,27 @@ async function loadModels() {
     const models = data.models || [];
     if (!models.length) throw new Error('No models');
 
-    populateDropdown(models);
+    modelSelect.replaceChildren(...models.map(model => new Option(model.name, model.name)));
     selectedModel = models[0].name;
-    selectDropdownOption(selectedModel);
+    modelSelect.value = selectedModel;
+    modelSelect.disabled = false;
+    modelStatus.textContent = 'Your opponent. Your choice.';
     startGameBtn.disabled = false;
   } catch (error) {
     console.error('Error loading models:', error);
-    setDropdownText('No models available');
+    modelSelect.replaceChildren(new Option('No models available', ''));
+    modelSelect.disabled = true;
+    modelStatus.textContent = 'Unable to connect. Check the server and refresh to try again.';
+    modelStatus.classList.add('error');
     startGameBtn.disabled = true;
-    alert('Unable to load models. Please try again later.');
   }
 }
 
-if (modelDropdown) {
-  loadModels();
-}
+loadModels();
 
 // Start a new game
 async function startNewGame() {
+  const startLabel = startGameBtn.querySelector('span');
   try {
     if (!selectedModel) {
       alert('Please select a model.');
@@ -533,6 +473,10 @@ async function startNewGame() {
     
     // Abort any previous game session
     abortCurrentGame();
+    startGameBtn.disabled = true;
+    modelSelect.disabled = true;
+    startGameBtn.setAttribute('aria-busy', 'true');
+    startLabel.textContent = 'Preparing the board...';
     
     const response = await fetch('/api/game/new', {
       method: 'POST',
@@ -541,6 +485,7 @@ async function startNewGame() {
     });
 
     const data = await response.json();
+    if (!response.ok || data.error) throw new Error(data.error || 'Failed to start game');
     gameId = data.gameId;
     moveCount = 0;
     lastMove = null;
@@ -567,7 +512,7 @@ async function startNewGame() {
     }
 
     gameSetup.style.display = 'none';
-    gameContainer.style.display = 'flex';
+    gameContainer.style.display = '';
     currentModelName = data.model || selectedModel || 'IA';
     currentDifficulty.textContent = currentModelName;
     
@@ -587,6 +532,11 @@ async function startNewGame() {
   } catch (error) {
     console.error('Error starting game:', error);
     alert('Failed to start game. Please try again.');
+  } finally {
+    startGameBtn.disabled = !selectedModel;
+    modelSelect.disabled = !selectedModel;
+    startGameBtn.removeAttribute('aria-busy');
+    startLabel.textContent = 'Start a game';
   }
 }
 
@@ -605,7 +555,7 @@ async function applyImportedGame(data) {
 
   // Reset UI state
   gameSetup.style.display = 'none';
-  gameContainer.style.display = 'flex';
+  gameContainer.style.display = '';
   chessBoard.style.pointerEvents = 'auto';
   chessBoard.style.opacity = '1';
   
